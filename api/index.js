@@ -67,6 +67,8 @@ wss.on('request', function(request) {
 });
 
 var map=new Map()
+var tasklist=[]
+var taskmap=new Map()
 var resultmap=new Map()
 app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
@@ -77,7 +79,8 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   var id=request.body.id;
   var type=request.body.type;
   map.set(id,request.body)
-  console.log(model)
+  
+  //console.log(model)
   //console.log(dataset)
   console.log(id)
   if(type=="lgbm")
@@ -92,9 +95,13 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
     resultmap.delete(id+"_nncol")
   }
  
-  GPUws.send("id#"+id)
+  //GPUws.send("id#"+id)
+  taskid++;
+  taskmap.set(taskid,request.body)
+  tasklist.push({taskid:taskid,userid:id})
+  console.log(taskmap)
   // 设置响应体
-  response.send("success");
+  return response.send({status:"success",taskid:taskid});
 
 });
 app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
@@ -102,21 +109,26 @@ app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.body)
   var id=request.body.id;
+  var maintaskid=request.body.maintaskid;
   var type=request.body.type;
-  var modeldata=map.get(id);
+  var modeldata=taskmap.get(maintaskid);
   modeldata.selectvalue=request.body.selectvalue;
   modeldata.colid=request.body.colid;
   modeldata.idcolid=request.body.idcolid;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
   //console.log(dataset)
-  resultmap.delete(id+"_lgbmcol")
-  resultmap.delete(id+"_nncol")
-  console.log(id)
-  GPUws.send("id#"+id)
+  // resultmap.delete(id+"_lgbmcol")
+  // resultmap.delete(id+"_nncol")
+  console.log(modeldata)
+  //GPUws.send("id#"+id)
   // 设置响应体
-  response.send("success");
+  taskid++;
+  taskmap.set(taskid,modeldata)
 
+  tasklist.push({taskid:taskid,userid:id})
+  console.log(taskmap)
+  response.send({status:"success",taskid:taskid});
 });
 app.get('/ajax/checkresult',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
@@ -124,9 +136,11 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
   //console.log(request.query)
   var params = request.query
   var userid=params.userid;
+  var taskid=parseInt(params.taskid);
   var type=params.type;
-  console.log(userid+"_"+type)
-  var modeldata=map.get(userid)
+  console.log(userid+"_"+type+"_"+taskid)
+  //var modeldata=map.get(userid)
+  var modeldata=taskmap.get(taskid)
   if(modeldata==null)
   {
     response.json({status:"empty"})
@@ -135,17 +149,17 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
   {
     var resultdata=null;
     if(type=="nn")
-      resultdata=resultmap.get(userid+"_nn")
+      resultdata=resultmap.get(taskid+"_nn")
     else if(type=="lgbm")
-      resultdata=resultmap.get(userid+"_lgbm")
+      resultdata=resultmap.get(taskid+"_lgbm")
     else if(type=="lgbmcol")
-      resultdata=resultmap.get(userid+"_lgbmcol")
+      resultdata=resultmap.get(taskid+"_lgbmcol")
     else if(type=="nncol")
-      resultdata=resultmap.get(userid+"_nncol")
+      resultdata=resultmap.get(taskid+"_nncol")
     //console.log(resultdata)
     if(resultdata!=null)
       response.json(resultdata)
-    else if(resultdata==null&&modeldata!=null&&modeldata.type==type)
+    else if(resultdata==null&&modeldata!=null)
       response.json({status:"running"});
     else
       response.json({status:"empty"});
@@ -161,8 +175,9 @@ app.get('/py/getdata',jsonParser,(request, response) => {
   console.log(request.query)
   var params = request.query
   userid=params.userid;
+  taskid=parseInt(params.taskid);
   console.log(userid)
-  var modeldata=map.get(userid)
+  var modeldata=taskmap.get(taskid)
   // 设置响应体
   console.log(modeldata)
   if(modeldata!=null)
@@ -171,30 +186,68 @@ app.get('/py/getdata',jsonParser,(request, response) => {
     response.json({status:"failed"})
 
 });
+
+var taskid=0;
+app.get('/py/polling',jsonParser,(request, response) => {
+  // 设置响应头  设置允许跨域
+  response.setHeader('Accss-Control-Allow-Origin', '*');
+  console.log(request.query)
+  var pytaskid = request.query.taskid;
+  if(pytaskid<tasklist[tasklist.length-1]){
+    for(var i=0;i<tasklist.length;i++)
+    {
+      var item = tasklist[i];
+      if(item.taskid==taskid)
+      {
+        response.json({taskid: tasklist[i].taskid,userid: tasklist[i].userid})
+      }
+    }
+    
+  }
+  else if(taskid>0&&pytaskid>0)
+  {
+    for(var i=0;i<tasklist.length;i++)
+    {
+      var item = tasklist[i];
+      if(item.taskid==taskid)
+      {
+        response.json({taskid: tasklist[i].taskid,userid: tasklist[i].userid})
+      }
+    }
+    
+  }
+  else
+  {
+    response.json({taskid:"0",userid:"0"})
+  }
+  
+
+});
 app.post('/py/returndata',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.body)
   var params = request.body
-  userid=params.userid;
+  var userid=params.userid;
+  var taskid=parseInt(params.taskid)
   console.log(userid)
-  var modeldata=map.get(userid)
+  var modeldata=taskmap.get(taskid)
   modeldata.running=0;
   if(request.body.type=="nn")
   {
-    resultmap.set(userid+"_nn",request.body)
+    resultmap.set(taskid+"_nn",request.body)
   }
   else if(request.body.type=="lgbm")
   {
-    resultmap.set(userid+"_lgbm",request.body)
+    resultmap.set(taskid+"_lgbm",request.body)
   }
   else if(request.body.type=="lgbmcol")
   {
-    resultmap.set(userid+"_lgbmcol",request.body)
+    resultmap.set(taskid+"_lgbmcol",request.body)
   }
   else if(request.body.type=="nncol")
   {
-    resultmap.set(userid+"_nncol",request.body)
+    resultmap.set(taskid+"_nncol",request.body)
   }
 
   
