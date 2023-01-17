@@ -9,10 +9,15 @@ const webSocketServer = require('websocket').server;
 const ServerPort = 3001;
 
 const app = express();
+
 app.use(bodyParser.json({limit: '500mb'}));
 app.use(bodyParser.urlencoded({limit: '500mb', extended: true}));
 var jsonParser = bodyParser.json()
-
+var map=new Map()
+var tasklist=[]
+var taskmap=new Map()
+var resultmap=new Map()
+var taskidpointer=0;
 
 app.get('/', function(req, res, next) {
   res.send('启动成功1');
@@ -66,10 +71,7 @@ wss.on('request', function(request) {
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(clients))
 });
 
-var map=new Map()
-var tasklist=[]
-var taskmap=new Map()
-var resultmap=new Map()
+
 app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -96,12 +98,12 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   }
  
   //GPUws.send("id#"+id)
-  taskid++;
-  taskmap.set(taskid,request.body)
-  tasklist.push({taskid:taskid,userid:id})
+  taskidpointer=taskidpointer+1;
+  taskmap.set(taskidpointer,request.body)
+  tasklist.push({taskid:taskidpointer,userid:id})
   console.log(taskmap)
   // 设置响应体
-  return response.send({status:"success",taskid:taskid});
+  return response.send({status:"success",taskid:taskidpointer});
 
 });
 app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
@@ -120,15 +122,15 @@ app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
-  console.log(modeldata)
+  console.log(request.body)
   //GPUws.send("id#"+id)
   // 设置响应体
-  taskid++;
-  taskmap.set(taskid,modeldata)
+  taskidpointer=taskidpointer+1;
+  taskmap.set(taskidpointer,modeldata)
 
   tasklist.push({taskid:taskid,userid:id})
   console.log(taskmap)
-  response.send({status:"success",taskid:taskid});
+  response.send({status:"success",taskid:taskidpointer});
 });
 app.get('/ajax/checkresult',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
@@ -187,34 +189,17 @@ app.get('/py/getdata',jsonParser,(request, response) => {
 
 });
 
-var taskid=0;
+
 app.get('/py/polling',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.query)
-  var pytaskid = request.query.taskid;
-  if(pytaskid<tasklist[tasklist.length-1]){
-    for(var i=0;i<tasklist.length;i++)
-    {
-      var item = tasklist[i];
-      if(item.taskid==taskid)
-      {
-        response.json({taskid: tasklist[i].taskid,userid: tasklist[i].userid})
-      }
-    }
-    
-  }
-  else if(taskid>0&&pytaskid>0)
+  var pytaskid = parseInt(request.query.taskid);
+  console.log("taskid:"+taskidpointer+"  pytaskid:"+pytaskid)
+  if((taskidpointer>0)&&(taskidpointer>pytaskid))
   {
-    for(var i=0;i<tasklist.length;i++)
-    {
-      var item = tasklist[i];
-      if(item.taskid==taskid)
-      {
-        response.json({taskid: tasklist[i].taskid,userid: tasklist[i].userid})
-      }
-    }
-    
+    //console.log(tasklist)
+    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1)["id"]})
   }
   else
   {
