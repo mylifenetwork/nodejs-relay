@@ -1,6 +1,9 @@
+import "./data"
 let express = require('express');
 let router = express.Router();
 const http = require('http');
+require('./data');
+
 let bodyParser = require('body-parser');
 /* GET home page. */
 
@@ -9,15 +12,22 @@ const webSocketServer = require('websocket').server;
 const ServerPort = 3001;
 
 const app = express();
-
+app.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By",' 3.2.1')
+  if(req.method=="OPTIONS") res.send(200);/*让options请求快速返回*/
+  else  next();
+});
 app.use(bodyParser.json({limit: '500mb'}));
 app.use(bodyParser.urlencoded({limit: '500mb', extended: true}));
 var jsonParser = bodyParser.json()
-let map=new Map()
-let tasklist=[]
-let taskmap=new Map()
-let resultmap=new Map()
-let taskidpointer=0;
+let map=global.datastore.map;
+let tasklist=global.datastore.tasklist;
+let taskmap=global.datastore.taskmap;
+let resultmap=global.datastore.resultmap;
+let taskidpointer=global.datastore.taskidpointer;
 
 app.get('/', function(req, res, next) {
   res.send('启动成功1');
@@ -241,4 +251,4 @@ app.post('/py/returndata',jsonParser,(request, response) => {
 });
 
 
-module.exports = router;
+module.exports = app;
