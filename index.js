@@ -196,7 +196,8 @@ app.get('/py/polling',jsonParser,(request, response) => {
   console.log("taskid:"+taskid+"  pytaskid:"+pytaskid)
   if((taskid>0)&&(taskid>pytaskid))
   {
-    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1).id})
+    //console.log(tasklist)
+    response.json({taskid:pytaskid+1,userid:tasklist[pytaskid].userid})
   }
   else
   {
