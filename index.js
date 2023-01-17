@@ -99,11 +99,11 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
  
   //GPUws.send("id#"+id)
   taskidpointer=taskidpointer+1;
-  taskmap.set(taskid,request.body)
-  tasklist.push({taskid:taskid,userid:id})
+  taskmap.set(taskidpointer,request.body)
+  tasklist.push({taskid:taskidpointer,userid:id})
   console.log(taskmap)
   // 设置响应体
-  return response.send({status:"success",taskid:taskid});
+  return response.send({status:"success",taskid:taskidpointer});
 
 });
 app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
@@ -122,15 +122,15 @@ app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
-  console.log(modeldata)
+  console.log(request.body)
   //GPUws.send("id#"+id)
   // 设置响应体
   taskidpointer=taskidpointer+1;
-  taskmap.set(taskid,modeldata)
+  taskmap.set(taskidpointer,modeldata)
 
   tasklist.push({taskid:taskid,userid:id})
   console.log(taskmap)
-  response.send({status:"success",taskid:taskid});
+  response.send({status:"success",taskid:taskidpointer});
 });
 app.get('/ajax/checkresult',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
@@ -199,7 +199,7 @@ app.get('/py/polling',jsonParser,(request, response) => {
   if((taskidpointer>0)&&(taskidpointer>pytaskid))
   {
     //console.log(tasklist)
-    response.json({taskid:pytaskid+1,userid:tasklist[pytaskid].userid})
+    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid).id})
   }
   else
   {
