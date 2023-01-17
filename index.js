@@ -1,7 +1,7 @@
-var express = require('express');
-var router = express.Router();
+let express = require('express');
+let router = express.Router();
 const http = require('http');
-var bodyParser = require('body-parser');
+let bodyParser = require('body-parser');
 /* GET home page. */
 
 
@@ -13,11 +13,11 @@ const app = express();
 app.use(bodyParser.json({limit: '500mb'}));
 app.use(bodyParser.urlencoded({limit: '500mb', extended: true}));
 var jsonParser = bodyParser.json()
-var map=new Map()
-var tasklist=[]
-var taskmap=new Map()
-var resultmap=new Map()
-var taskidpointer=0;
+let map=new Map()
+let tasklist=[]
+let taskmap=new Map()
+let resultmap=new Map()
+let taskidpointer=0;
 
 app.get('/', function(req, res, next) {
   res.send('启动成功1');
