@@ -1270,6 +1270,11 @@ typescript@4.3.4:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.3.4.tgz#3f85b986945bcf31071decdd96cf8bfa65f9dcbc"
   integrity sha512-uauPG7XZn9F/mo+7MrsRjyvbxFpzemRjKEZXS4AK83oP2KKOJPvb+9cO/gmnv8arWZvhnjVOXz7B49m1l0e9Ew==
 
+uglify-js-export@^3.17.4:
+  version "3.17.4"
+  resolved "https://registry.yarnpkg.com/uglify-js-export/-/uglify-js-export-3.17.4.tgz#4d11757ce56fa0f99a05182973c97e3a13fc9862"
+  integrity sha512-MuFGWYiC9xZ5oBwaYlRBhhS1OfHeVF0M6xe85x5ch1v3bYD3BzaOlzLP4FhHSRmIXglxgoozRzqwNV+Sv4hqVQ==
+
 uglify-js@^3.17.4:
   version "3.17.4"
   resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.17.4.tgz#61678cf5fa3f5b7eb789bb345df29afb8257c22c"

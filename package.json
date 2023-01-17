@@ -14,6 +14,7 @@
     "jade": "^0.31.2",
     "morgan": "~1.9.1",
     "uglify-js": "^3.17.4",
+    "uglify-js-export": "^3.17.4",
     "websocket": "^1.0.34"
   },
   "devDependencies": {
