@@ -3,9 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node index.js",
-    "dev": "./node_modules/.bin/nodemon index.js",
-    "prd": "pm2 start index.js"
+    "start": "node ./bin/www"
   },
   "dependencies": {
     "body-parser": "^1.20.1",
@@ -16,7 +14,6 @@
     "jade": "^0.31.2",
     "morgan": "~1.9.1",
     "uglify-js": "^3.17.4",
-    "uglify-js-export": "^3.17.4",
     "websocket": "^1.0.34"
   },
   "devDependencies": {
