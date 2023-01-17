@@ -199,7 +199,7 @@ app.get('/py/polling',jsonParser,(request, response) => {
   if((taskidpointer>0)&&(taskidpointer>pytaskid))
   {
     //console.log(tasklist)
-    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid).id})
+    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1)["id"]})
   }
   else
   {
