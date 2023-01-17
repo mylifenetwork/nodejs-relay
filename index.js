@@ -97,7 +97,7 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   }
  
   //GPUws.send("id#"+id)
-  taskid++;
+  taskid=taskid+1;
   taskmap.set(taskid,request.body)
   tasklist.push({taskid:taskid,userid:id})
   console.log(taskmap)
@@ -124,7 +124,7 @@ app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
   console.log(modeldata)
   //GPUws.send("id#"+id)
   // 设置响应体
-  taskid++;
+  taskid=taskid+1;
   taskmap.set(taskid,modeldata)
 
   tasklist.push({taskid:taskid,userid:id})
@@ -193,7 +193,7 @@ app.get('/py/polling',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.query)
-  var pytaskid = request.query.taskid;
+  var pytaskid = parseInt(request.query.taskid);
   console.log("taskid:"+taskid+"  pytaskid:"+pytaskid)
   if((taskid>0)&&(taskid>pytaskid))
   {
