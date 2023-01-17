@@ -1,4 +1,3 @@
-import "./data"
 let express = require('express');
 let router = express.Router();
 const http = require('http');
