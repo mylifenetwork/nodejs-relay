@@ -17,7 +17,7 @@ var map=new Map()
 var tasklist=[]
 var taskmap=new Map()
 var resultmap=new Map()
-var taskid=0;
+var taskidpointer=0;
 
 app.get('/', function(req, res, next) {
   res.send('启动成功1');
@@ -98,7 +98,7 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   }
  
   //GPUws.send("id#"+id)
-  taskid=taskid+1;
+  taskidpointer=taskidpointer+1;
   taskmap.set(taskid,request.body)
   tasklist.push({taskid:taskid,userid:id})
   console.log(taskmap)
@@ -125,7 +125,7 @@ app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
   console.log(modeldata)
   //GPUws.send("id#"+id)
   // 设置响应体
-  taskid=taskid+1;
+  taskidpointer=taskidpointer+1;
   taskmap.set(taskid,modeldata)
 
   tasklist.push({taskid:taskid,userid:id})
@@ -195,8 +195,8 @@ app.get('/py/polling',jsonParser,(request, response) => {
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.query)
   var pytaskid = parseInt(request.query.taskid);
-  console.log("taskid:"+taskid+"  pytaskid:"+pytaskid)
-  if((taskid>0)&&(taskid>pytaskid))
+  console.log("taskid:"+taskidpointer+"  pytaskid:"+pytaskid)
+  if((taskidpointer>0)&&(taskidpointer>pytaskid))
   {
     //console.log(tasklist)
     response.json({taskid:pytaskid+1,userid:tasklist[pytaskid].userid})
