@@ -13,7 +13,11 @@ const app = express();
 app.use(bodyParser.json({limit: '500mb'}));
 app.use(bodyParser.urlencoded({limit: '500mb', extended: true}));
 var jsonParser = bodyParser.json()
-
+var map=new Map()
+var tasklist=[]
+var taskmap=new Map()
+var resultmap=new Map()
+var taskid=0;
 
 app.get('/', function(req, res, next) {
   res.send('启动成功1');
@@ -67,10 +71,7 @@ wss.on('request', function(request) {
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(clients))
 });
 
-var map=new Map()
-var tasklist=[]
-var taskmap=new Map()
-var resultmap=new Map()
+
 app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -188,7 +189,7 @@ app.get('/py/getdata',jsonParser,(request, response) => {
 
 });
 
-var taskid=0;
+
 app.get('/py/polling',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
