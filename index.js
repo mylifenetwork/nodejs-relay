@@ -193,28 +193,10 @@ app.get('/py/polling',jsonParser,(request, response) => {
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.query)
   var pytaskid = request.query.taskid;
-  if(pytaskid<tasklist[tasklist.length-1]){
-    for(var i=0;i<tasklist.length;i++)
-    {
-      var item = tasklist[i];
-      if(item.taskid==taskid)
-      {
-        response.json({taskid: tasklist[i].taskid,userid: tasklist[i].userid})
-      }
-    }
-    
-  }
-  else if(taskid>0&&pytaskid>0)
+
+  if(taskid>0&&pytaskid>0&&taskid>pytaskid)
   {
-    for(var i=0;i<tasklist.length;i++)
-    {
-      var item = tasklist[i];
-      if(item.taskid==taskid)
-      {
-        response.json({taskid: tasklist[i].taskid,userid: tasklist[i].userid})
-      }
-    }
-    
+    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1).id})
   }
   else
   {
