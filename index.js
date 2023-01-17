@@ -22,11 +22,11 @@ app.all('*', function(req, res, next) {
 app.use(bodyParser.json({limit: '500mb'}));
 app.use(bodyParser.urlencoded({limit: '500mb', extended: true}));
 var jsonParser = bodyParser.json()
-let map=global.datastore.map;
-let tasklist=global.datastore.tasklist;
-let taskmap=global.datastore.taskmap;
-let resultmap=global.datastore.resultmap;
-let taskidpointer=global.datastore.taskidpointer;
+//let map=global.datastore.map;
+//let global.datastore.tasklist=global.datastore.global.datastore.tasklist;
+//let global.datastore.taskmap=global.datastore.global.datastore.taskmap;
+//let global.datastore.resultmap=global.datastore.global.datastore.resultmap;
+//let global.datastore.taskidpointer=global.datastore.global.datastore.taskidpointer;
 
 app.get('/', function(req, res, next) {
   res.send('启动成功1');
@@ -89,30 +89,30 @@ app.post('/ajax/sendmodel',jsonParser,(request, response) => {
   var dataset=request.body.dataset;
   var id=request.body.id;
   var type=request.body.type;
-  map.set(id,request.body)
+  global.datastore.map.set(id,request.body)
   
   //console.log(model)
   //console.log(dataset)
   console.log(id)
   if(type=="lgbm")
   {
-    resultmap.delete(id+"_lgbm")
-    resultmap.delete(id+"_lgbmcol")
+    global.datastore.resultmap.delete(id+"_lgbm")
+    global.datastore.resultmap.delete(id+"_lgbmcol")
   }
     
   if(type=="nn")
   {
-    resultmap.delete(id+"_nn")
-    resultmap.delete(id+"_nncol")
+    global.datastore.resultmap.delete(id+"_nn")
+    global.datastore.resultmap.delete(id+"_nncol")
   }
  
   //GPUws.send("id#"+id)
-  taskidpointer=taskidpointer+1;
-  taskmap.set(taskidpointer,request.body)
-  tasklist.push({taskid:taskidpointer,userid:id})
-  console.log(taskmap)
+  global.datastore.taskidpointer=global.datastore.taskidpointer+1;
+  global.datastore.taskmap.set(global.datastore.taskidpointer,request.body)
+  global.datastore.tasklist.push({taskid:global.datastore.taskidpointer,userid:id})
+  console.log(global.datastore.taskmap)
   // 设置响应体
-  return response.send({status:"success",taskid:taskidpointer});
+  return response.send({status:"success",taskid:global.datastore.taskidpointer});
 
 });
 app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
@@ -122,24 +122,24 @@ app.post('/ajax/sendmodelcol',jsonParser,(request, response) => {
   var id=request.body.id;
   var maintaskid=request.body.maintaskid;
   var type=request.body.type;
-  var modeldata=taskmap.get(maintaskid);
+  var modeldata=global.datastore.taskmap.get(maintaskid);
   modeldata.selectvalue=request.body.selectvalue;
   modeldata.colid=request.body.colid;
   modeldata.idcolid=request.body.idcolid;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
   //console.log(dataset)
-  // resultmap.delete(id+"_lgbmcol")
-  // resultmap.delete(id+"_nncol")
+  // global.datastore.resultmap.delete(id+"_lgbmcol")
+  // global.datastore.resultmap.delete(id+"_nncol")
   console.log(request.body)
   //GPUws.send("id#"+id)
   // 设置响应体
-  taskidpointer=taskidpointer+1;
-  taskmap.set(taskidpointer,modeldata)
+  global.datastore.taskidpointer=global.datastore.taskidpointer+1;
+  global.datastore.taskmap.set(global.datastore.taskidpointer,modeldata)
 
-  tasklist.push({taskid:taskid,userid:id})
-  console.log(taskmap)
-  response.send({status:"success",taskid:taskidpointer});
+  global.datastore.tasklist.push({taskid:taskid,userid:id})
+  console.log(global.datastore.taskmap)
+  response.send({status:"success",taskid:global.datastore.taskidpointer});
 });
 app.get('/ajax/checkresult',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
@@ -151,7 +151,7 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
   var type=params.type;
   console.log(userid+"_"+type+"_"+taskid)
   //var modeldata=map.get(userid)
-  var modeldata=taskmap.get(taskid)
+  var modeldata=global.datastore.taskmap.get(taskid)
   if(modeldata==null)
   {
     response.json({status:"empty"})
@@ -160,13 +160,13 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
   {
     var resultdata=null;
     if(type=="nn")
-      resultdata=resultmap.get(taskid+"_nn")
+      resultdata=global.datastore.resultmap.get(taskid+"_nn")
     else if(type=="lgbm")
-      resultdata=resultmap.get(taskid+"_lgbm")
+      resultdata=global.datastore.resultmap.get(taskid+"_lgbm")
     else if(type=="lgbmcol")
-      resultdata=resultmap.get(taskid+"_lgbmcol")
+      resultdata=global.datastore.resultmap.get(taskid+"_lgbmcol")
     else if(type=="nncol")
-      resultdata=resultmap.get(taskid+"_nncol")
+      resultdata=global.datastore.resultmap.get(taskid+"_nncol")
     //console.log(resultdata)
     if(resultdata!=null)
       response.json(resultdata)
@@ -188,7 +188,7 @@ app.get('/py/getdata',jsonParser,(request, response) => {
   userid=params.userid;
   taskid=parseInt(params.taskid);
   console.log(userid)
-  var modeldata=taskmap.get(taskid)
+  var modeldata=global.datastore.taskmap.get(taskid)
   // 设置响应体
   console.log(modeldata)
   if(modeldata!=null)
@@ -204,11 +204,11 @@ app.get('/py/polling',jsonParser,(request, response) => {
   response.setHeader('Accss-Control-Allow-Origin', '*');
   console.log(request.query)
   var pytaskid = parseInt(request.query.taskid);
-  console.log("taskid:"+taskidpointer+"  pytaskid:"+pytaskid)
-  if((taskidpointer>0)&&(taskidpointer>pytaskid))
+  console.log("taskid:"+global.datastore.taskidpointer+"  pytaskid:"+pytaskid)
+  if((global.datastore.taskidpointer>0)&&(global.datastore.taskidpointer>pytaskid))
   {
-    //console.log(tasklist)
-    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1)["id"]})
+    //console.log(global.datastore.tasklist)
+    response.json({taskid:pytaskid+1,userid:global.datastore.taskmap.get(pytaskid+1)["id"]})
   }
   else
   {
@@ -225,23 +225,23 @@ app.post('/py/returndata',jsonParser,(request, response) => {
   var userid=params.userid;
   var taskid=parseInt(params.taskid)
   console.log(userid)
-  var modeldata=taskmap.get(taskid)
+  var modeldata=global.datastore.taskmap.get(taskid)
   modeldata.running=0;
   if(request.body.type=="nn")
   {
-    resultmap.set(taskid+"_nn",request.body)
+    global.datastore.resultmap.set(taskid+"_nn",request.body)
   }
   else if(request.body.type=="lgbm")
   {
-    resultmap.set(taskid+"_lgbm",request.body)
+    global.datastore.resultmap.set(taskid+"_lgbm",request.body)
   }
   else if(request.body.type=="lgbmcol")
   {
-    resultmap.set(taskid+"_lgbmcol",request.body)
+    global.datastore.resultmap.set(taskid+"_lgbmcol",request.body)
   }
   else if(request.body.type=="nncol")
   {
-    resultmap.set(taskid+"_nncol",request.body)
+    global.datastore.resultmap.set(taskid+"_nncol",request.body)
   }
 
   
