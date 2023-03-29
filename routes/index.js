@@ -4,6 +4,7 @@ const { Sequelize, Model, DataTypes } = require('sequelize');
 
 
 let bodyParser = require('body-parser');
+const { Json } = require('sequelize/lib/utils');
 /* GET home page. */
 
 
@@ -170,12 +171,13 @@ app.post('/ajax/sendmodelrow',jsonParser,(request, response) => {
   request.body.id=id.toString();
   var maintaskid=request.body.maintaskid;
   var type=request.body.type;
-  var modeldata=taskmap.get(maintaskid);
+  var modeldata={...taskmap.get(maintaskid)};
   modeldata.jsondata=request.body.jsondata;
   modeldata.colid=request.body.colid;
   modeldata.idcolid=request.body.idcolid;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  delete modeldata.norun; 
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
@@ -208,13 +210,14 @@ app.post('/ajax/sendmodelp',jsonParser,(request, response) => {
   request.body.id=id.toString();
   var maintaskid=request.body.maintaskid;
   var type=request.body.type;
-  var modeldata=taskmap.get(maintaskid);
+  var modeldata={...taskmap.get(maintaskid)};
   //modeldata.jsondata=request.body.jsondata;
   // modeldata.colid=request.body.colid;
   modeldata.idcolid=request.body.idcolid;
   modeldata.cidx=request.body.cidx;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  delete modeldata.norun; 
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
@@ -247,7 +250,7 @@ app.post('/ajax/sendmodelpl',jsonParser,(request, response) => {
   request.body.id=id.toString();
   var maintaskid=request.body.maintaskid;
   var type=request.body.type;
-  var modeldata=taskmap.get(maintaskid);
+  var modeldata={...taskmap.get(maintaskid)};
   modeldata.jsondata=request.body.jsondata;
   if(request.body.jsondata2!=undefined)
     modeldata.jsondata2=request.body.jsondata2;
@@ -256,6 +259,7 @@ app.post('/ajax/sendmodelpl',jsonParser,(request, response) => {
   modeldata.idcolid=request.body.idcolid;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  delete modeldata.norun; 
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
@@ -362,6 +366,90 @@ app.get('/ajax/getdetailrecord',jsonParser,async (request, response) => {
 
 });
 
+app.get('/ajax/getprojectlist',jsonParser,async (request, response) => {
+  // 设置响应头  设置允许跨域
+  response.setHeader('Accss-Control-Allow-Origin', '*');
+  //console.log(request.query)
+  var params = request.query
+  //var userid=params.userid;
+  var type=params.type;
+  try {
+    var userid=request.session.user.id;
+    const projects=await getProjectList(userid);
+    var projectforsend=[];
+    for(var i=0;i<projects.length;i++)
+    {
+      projectforsend.push({dashboardid:projects[i].dashboardid,userid:projects[i].userid,name:projects[i].name,type:projects[i].name,createdAt:projects[i].createdAt})
+    }
+    response.json(projects);
+  } catch (error) {
+    console.log(error)
+  }
+ 
+
+});
+
+app.get('/ajax/getdetailproject',jsonParser,async (request, response) => {
+  // 设置响应头  设置允许跨域
+  response.setHeader('Accss-Control-Allow-Origin', '*');
+  //console.log(request.query)
+  var params = request.query
+  //var userid=params.userid;
+  var dashboardid=params.dashboardid;
+  try {
+    var userid=request.session.user.id;
+    const records=await getDetailProject(userid,dashboardid);
+    var taskid=await createtask(records,userid)
+    response.json({dataset:records.dataset,name:records.name,type:records.type,idcolid:records.idcolid,labelcolid:records.labelcolid,recordid:records.recordid,taskid:taskid});
+  } catch (error) {
+    console.log(error)
+  }
+
+
+});
+async function createtask(body,user)
+{
+  //console.log(body)
+  var model=body.model;
+  var dataset=body.dataset;
+  //var id=request.body.id;
+  console.log(user)
+  var id=user;
+  body.id=id.toString();
+  var type=body.type;
+  //map.set(id,request.body)
+  if(taskidpointer>200)
+  {
+    taskmap.delete((taskidpointer-200));
+  }
+  taskidpointer=taskidpointer+1;
+  
+  let project=body.dataValues;
+  //console.log(project)
+  project["norun"]=1;
+  project["id"]=project.userid;
+  taskmap.set(taskidpointer,project)
+  tasklist.push({taskid:taskidpointer,userid:id})
+  console.log(tasklist)
+  var taskid=taskidpointer;
+  //console.log(model)
+  //console.log(dataset)
+  const records=await getDetailResult(id,body.recordid);
+  //GPUws.send("id#"+id)
+  //console.log(records)
+  if(body.type=="nn")
+  {
+    resultmap.set(taskid+"_nn",JSON.parse(records.json_data))
+  
+  }
+  else if(body.type=="lgbm")
+  {
+    resultmap.set(taskid+"_lgbm",JSON.parse(records.json_data))
+  }
+  //console.log(taskmap)
+  // 设置响应体
+  return taskidpointer;
+}
 app.get('/py/getdata',jsonParser,(request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -370,12 +458,18 @@ app.get('/py/getdata',jsonParser,(request, response) => {
   userid=params.userid;
   //var userid=req.session.user.id;
   var taskid=parseInt(params.taskid);
-  console.log(userid)
+  var need=parseInt(params.need);
+  console.log(userid+","+need+","+taskid);
   var modeldata=taskmap.get(taskid)
   // 设置响应体
-  console.log(modeldata)
+  // console.log(modeldata)
   if(modeldata!=null)
   {
+    if(need==0)
+    {
+      delete modeldata.model;
+      delete modeldata.dataset;
+    }
     response.json(modeldata)
     modeldata["running"]=1
   }
@@ -394,21 +488,22 @@ app.get('/py/polling',jsonParser,(request, response) => {
   console.log("taskid:"+taskidpointer+"  pytaskid:"+pytaskid)
   if(count==0)
   {
-    return response.json({taskid:taskidpointer,userid:"0"})
+    return response.json({taskid:taskidpointer,userid:"0",type:-1,dashboardid:-1})
   }
   if((taskidpointer>0)&&(taskidpointer>pytaskid))
   {
-    //console.log(tasklist)
-    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1)["id"]})
+    console.log("userid:"+taskmap.get(pytaskid+1)["id"])
+    console.log(taskmap.get(pytaskid+1)["type"])
+    response.json({taskid:pytaskid+1,userid:taskmap.get(pytaskid+1)["id"],type:taskmap.get(pytaskid+1).hasOwnProperty("type")?taskmap.get(pytaskid+1)["type"]:-1,dashboardid:taskmap.get(pytaskid+1).hasOwnProperty("dashboardid")?taskmap.get(pytaskid+1)["dashboardid"]:-1})
   }
   else
   {
-    response.json({taskid:taskidpointer,userid:"0"})
+    response.json({taskid:taskidpointer,userid:"0",type:-1,dashboardid:-1})
   }
   
 
 });
-app.post('/py/returndata',jsonParser,(request, response) => {
+app.post('/py/returndata',jsonParser,async(request, response) => {
   try {
       // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -420,17 +515,29 @@ app.post('/py/returndata',jsonParser,(request, response) => {
   var modeldata=taskmap.get(taskid)
   // console.log(modeldata)
   modeldata["running"]=0;
+  let record=null;
   if(request.body.type=="nn")
   {
     resultmap.set(taskid+"_nn",request.body)
     if(request.body.error==undefined)
-      saveResult(userid,request.body.type,request.body)
+    {
+      record=await saveResult(userid,request.body.type,request.body);
+      await saveProject(userid,modeldata.name,modeldata.type,modeldata.dataset,modeldata.model,modeldata.idcolid,modeldata.labelcolid,record.dataValues.record_id)
+      //return response.json({status:"success",recordid:record.record_id})
+    }
+     
+      
   }
   else if(request.body.type=="lgbm")
   {
     resultmap.set(taskid+"_lgbm",request.body)
     if(request.body.error==undefined)
-      saveResult(userid,request.body.type,request.body)
+    {
+      record=await saveResult(userid,request.body.type,request.body);
+      console.log(record.dataValues)
+      await saveProject(userid,modeldata.name,modeldata.type,modeldata.dataset,modeldata.model,modeldata.idcolid,modeldata.labelcolid,record.dataValues.record_id)
+      //return response.json({status:"success",recordid:record.record_id})
+    }
   }
   else if(request.body.type=="lgbmcol")
   {
@@ -456,17 +563,18 @@ app.post('/py/returndata',jsonParser,(request, response) => {
   {
     resultmap.set(taskid+"_nnrow",request.body)
   }
+  return response.json({status:"success"})
   
-  response.json({status:"success"})
   } catch (error) {
     console.log(error)
   }
 
 
 });
+//47.242.115.75
 // Glassbox0128@
-const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
-  host: '127.0.0.1',
+const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
+  host: '47.242.115.75',
   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
   timezone: '+08:00',
   dialectOptions: {
@@ -475,11 +583,23 @@ const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
 } 
 });
 
+
+// const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
+//   host: '127.0.0.1',
+//   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
+//   timezone: '+08:00',
+//   dialectOptions: {
+//     dateStrings: true,
+//     typeCast: true
+// } 
+// });
+
 const Record = sequelize.define('record', {
   record_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    primaryKey: true
+    primaryKey: true,
+    autoIncrement: true
   },
   // 在这里定义模型属性
   user_id: {
@@ -504,8 +624,12 @@ console.log(Record === sequelize.models.Record);
 
 async function saveResult(userid,type,resultdata)
 {
-  const record = await Record.create({ record_id: 0,user_id:userid,type:type,json_data:JSON.stringify(resultdata)  });
-  console.log(record);
+  let recordresult=-1;
+  const record = await Record.create({ record_id: 0,user_id:userid,type:type,json_data:JSON.stringify(resultdata)}).then(result => {
+    recordresult=result
+  });
+  console.log(recordresult);
+  return recordresult;
 }
 
 async function getResultList(userid,type)
@@ -531,6 +655,86 @@ async function getDetailResult(userid,recordid)
     where: {
       user_id: userid,
       record_id:recordid
+    },
+  });
+  return records;
+}
+
+const Project = sequelize.define('project', {
+  dashboardid: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  userid: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  // 在这里定义模型属性
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  dataset: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  model: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  idcolid: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  labelcolid: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  recordid: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+}, {
+  // 这是其他模型参数
+});
+
+async function getProjectList(userid,type)
+{
+  const projects= await Project.findAll({
+    where: {
+      userid: userid,
+      // type:type
+    },
+    attributes: [
+      'dashboardid','userid','name','type','createdAt','updatedAt'
+    ],
+    order: [
+      ['createdAt', 'DESC'],
+      
+  ]
+  });
+  return projects;
+}
+
+async function saveProject(userid,name,type,dataset,model,idcolid,labelcolid,recordid)
+{
+  const project = await Project.create({ dashboardid: 0,userid:userid,name:name,type:type,dataset:dataset,model:model,idcolid:idcolid,labelcolid:labelcolid,recordid:recordid});
+  console.log(recordid);
+  return project;
+}
+
+async function getDetailProject(userid,dashboardid)
+{
+  const records= await Project.findOne({
+    where: {
+      dashboardid:dashboardid,
+      userid: userid,
     },
   });
   return records;
