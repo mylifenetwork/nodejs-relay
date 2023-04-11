@@ -5,8 +5,19 @@ let bodyParser = require('body-parser');
 const { token } = require('morgan');
 var jsonParser = bodyParser.json()
 var router = express.Router();
-const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
-  host: '47.242.115.75',
+// const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
+//   host: '47.242.115.75',
+//   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
+//   timezone: '+08:00',
+//   dialectOptions: {
+//     dateStrings: true,
+//     typeCast: true
+// } 
+// });
+
+
+const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
+  host: '127.0.0.1',
   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
   timezone: '+08:00',
   dialectOptions: {
@@ -14,6 +25,7 @@ const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
     typeCast: true
 } 
 });
+
 
 /* GET users listing. */
 app.get('/', jsonParser, function (req, res, next) {

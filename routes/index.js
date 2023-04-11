@@ -217,7 +217,13 @@ app.post('/ajax/sendmodelp',jsonParser,(request, response) => {
   modeldata.cidx=request.body.cidx;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
-  delete modeldata.norun; 
+  delete modeldata.norun;
+  if(request.body.hasOwnProperty("output"))
+  {
+    console.log(request.body.output)
+    modeldata.output=request.body.output;
+  }
+   
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
@@ -260,6 +266,11 @@ app.post('/ajax/sendmodelpl',jsonParser,(request, response) => {
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
   delete modeldata.norun; 
+  if(request.body.hasOwnProperty("output"))
+  {
+    console.log(request.body.output)
+    modeldata.output=request.body.output;
+  }
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
   // resultmap.delete(id+"_nncol")
@@ -283,6 +294,7 @@ app.post('/ajax/sendmodelpl',jsonParser,(request, response) => {
  
 });
 app.get('/ajax/checkresult',jsonParser,(request, response) => {
+  try {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
   //console.log(request.query)
@@ -291,6 +303,7 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
   var userid=request.session.user.id;
   request.body.id=userid;
   var taskid=parseInt(params.taskid);
+
   var type=params.type;
   console.log(userid+"_"+type+"_"+taskid)
   //var modeldata=map.get(userid)
@@ -318,9 +331,43 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
       resultdata=resultmap.get(taskid+"_lgbmrow")
     else if(type=="nnrow")
       resultdata=resultmap.get(taskid+"_nnrow")
+    else if(type=="nn_p")
+      resultdata=resultmap.get(taskid+"_nn_p")
+    else if(type=="nn_pl")
+      resultdata=resultmap.get(taskid+"_nn_pl")
     //console.log(resultdata)
     if(resultdata!=null)
-      response.json(resultdata)
+    {
+      var dataforsend={...resultdata};
+      if(dataforsend.hasOwnProperty("outputlen"))
+      {
+        var len=parseInt(dataforsend.outputlen);
+        for (var i=0;i<len;i++)
+        {
+          if(i!=0)
+          {
+            delete dataforsend[type+"_summary_plot_"+i]
+            delete dataforsend[type+"_decision_plot_"+i]
+          }
+          if((type=="nn_p"||type=="nn_pl")&&(modeldata.hasOwnProperty("output")&&modeldata.output!=i))
+          {
+            var typetemp="nn";
+            if(type=="nn_pl")
+              typetemp="nnrow";
+            var rawheaders=dataforsend.headers
+            var idx=parseInt(dataforsend.idx)
+            var header=rawheaders[idx]
+            delete dataforsend[typetemp+"_partial_dependence_plot_"+header+"_"+i]
+          }
+           
+        }
+        dataforsend.output=modeldata.output;
+        response.json(dataforsend)
+      }
+      else
+        response.json(resultdata)
+    }
+      
     else if(resultdata==null&&modeldata!=null&&modeldata.running==1)
       response.json({status:"running"});
     else
@@ -328,6 +375,104 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
   
 
   }
+} catch (error) {
+  console.log(error)
+}
+});
+
+app.get('/ajax/getbyoutput',jsonParser,(request, response) => {
+  try {
+  // 设置响应头  设置允许跨域
+  response.setHeader('Accss-Control-Allow-Origin', '*');
+  //console.log(request.query)
+  var params = request.query
+  //var userid=params.userid;
+  var userid=request.session.user.id;
+  request.body.id=userid;
+  var taskid=parseInt(params.taskid);
+  var type=params.type;
+  var pos=params.pos;
+  var subtaskid=parseInt(params.subtaskid);
+  var subtype=params.subtype
+  console.log(userid+"_"+type+"_"+taskid)
+  //var modeldata=map.get(userid)
+  var modeldata=taskmap.get(taskid)
+  if(modeldata==null)
+  {
+    response.json({status:"empty"})
+  }
+  else
+  {
+    var resultdata=null;
+    if(type=="nn")
+      resultdata=resultmap.get(taskid+"_nn")
+    else if(type=="lgbm")
+      resultdata=resultmap.get(taskid+"_lgbm")
+    else if(type=="lgbmcol")
+      resultdata=resultmap.get(taskid+"_lgbmcol")
+    else if(type=="lgbm_p")
+      resultdata=resultmap.get(taskid+"_lgbm_p")
+    else if(type=="lgbm_pl")
+      resultdata=resultmap.get(taskid+"_lgbm_pl")
+    else if(type=="nncol")
+      resultdata=resultmap.get(taskid+"_nncol")
+    else if(type=="lgbmrow")
+      resultdata=resultmap.get(taskid+"_lgbmrow")
+    else if(type=="nnrow")
+      resultdata=resultmap.get(taskid+"_nnrow")
+    else if(type=="nn_p")
+      resultdata=resultmap.get(taskid+"_nn_p")
+    else if(type=="nn_pl")
+      resultdata=resultmap.get(taskid+"_nn_pl")
+    //console.log(resultdata)
+    if(resultdata!=null)
+    {
+        var typetemp="";
+        if(type.indexOf("nn")!=-1)
+          typetemp="nn";
+        else  if(type.indexOf("lgbm")!=-1)
+          typetemp="lgbm";
+        var summary_plot= resultdata[typetemp+"_summary_plot_"+pos];
+        var decision_plot= resultdata[typetemp+"_decision_plot_"+pos];
+        
+        if(subtaskid!=-1)
+        {
+          var resultdata2=resultmap.get(subtaskid+"_"+subtype)
+          console.log(resultdata2)
+          var rawheaders=resultdata2.headers
+          var idx=parseInt(resultdata2.idx)
+          var header=rawheaders[idx]
+          var partial_dependence_plot= resultdata2[type+"_partial_dependence_plot_"+header+"_"+pos];
+          if(type=="nnrow")
+        {
+          var waterfall_plot=resultdata[typetemp+"_waterfall_plot_"+pos];
+          response.json({summary_plot:summary_plot,decision_plot:decision_plot,partial_dependence_plot:partial_dependence_plot,waterfall_plot:waterfall_plot})
+        }
+          response.json({summary_plot:summary_plot,decision_plot:decision_plot,partial_dependence_plot:partial_dependence_plot})
+          
+        }
+        else
+        {
+          if(type=="nnrow")
+          {
+            var waterfall_plot=resultdata[typetemp+"_waterfall_plot_"+pos];
+            response.json({summary_plot:summary_plot,decision_plot:decision_plot,waterfall_plot:waterfall_plot})
+          }
+          response.json({summary_plot:summary_plot,decision_plot:decision_plot})
+        }
+       
+    }
+      
+    else if(resultdata==null&&modeldata!=null&&modeldata.running==1)
+      response.json({status:"running"});
+    else
+      response.json({status:"empty"});
+  
+
+  }
+} catch (error) {
+  console.log(error)
+}
 
 });
 
@@ -372,14 +517,13 @@ app.get('/ajax/getprojectlist',jsonParser,async (request, response) => {
   //console.log(request.query)
   var params = request.query
   //var userid=params.userid;
-  var type=params.type;
   try {
     var userid=request.session.user.id;
     const projects=await getProjectList(userid);
     var projectforsend=[];
     for(var i=0;i<projects.length;i++)
     {
-      projectforsend.push({dashboardid:projects[i].dashboardid,userid:projects[i].userid,name:projects[i].name,type:projects[i].name,createdAt:projects[i].createdAt})
+      projectforsend.push({dashboardid:projects[i].dashboardid,userid:projects[i].userid,name:projects[i].name,type:projects[i].type,createdAt:projects[i].createdAt})
     }
     response.json(projects);
   } catch (error) {
@@ -563,6 +707,14 @@ app.post('/py/returndata',jsonParser,async(request, response) => {
   {
     resultmap.set(taskid+"_nnrow",request.body)
   }
+  else if(request.body.type=="nn_p")
+  {
+    resultmap.set(taskid+"_nn_p",request.body)
+  }
+  else if(request.body.type=="nn_pl")
+  {
+    resultmap.set(taskid+"_nn_pl",request.body)
+  }
   return response.json({status:"success"})
   
   } catch (error) {
@@ -573,19 +725,8 @@ app.post('/py/returndata',jsonParser,async(request, response) => {
 });
 //47.242.115.75
 // Glassbox0128@
-const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
-  host: '47.242.115.75',
-  dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
-  timezone: '+08:00',
-  dialectOptions: {
-    dateStrings: true,
-    typeCast: true
-} 
-});
-
-
-// const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
-//   host: '127.0.0.1',
+// const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
+//   host: '47.242.115.75',
 //   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
 //   timezone: '+08:00',
 //   dialectOptions: {
@@ -593,6 +734,17 @@ const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
 //     typeCast: true
 // } 
 // });
+
+
+const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
+  host: '127.0.0.1',
+  dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
+  timezone: '+08:00',
+  dialectOptions: {
+    dateStrings: true,
+    typeCast: true
+} 
+});
 
 const Record = sequelize.define('record', {
   record_id: {
