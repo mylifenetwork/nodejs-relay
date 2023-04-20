@@ -293,6 +293,44 @@ app.post('/ajax/sendmodelpl',jsonParser,(request, response) => {
   }
  
 });
+
+app.post('/ajax/sendmodelcm',jsonParser,(request, response) => {
+  try {
+     // 设置响应头  设置允许跨域
+  response.setHeader('Accss-Control-Allow-Origin', '*');
+  console.log(request.body)
+  //var id=request.body.id;
+  var id=request.session.user.id;
+  request.body.id=id.toString();
+  var maintaskid=request.body.maintaskid;
+  var type=request.body.type;
+  var modeldata={...taskmap.get(maintaskid)};
+  //modeldata.jsondata=request.body.jsondata;
+  // modeldata.colid=request.body.colid;
+  modeldata.idcolid=request.body.idcolid;
+  modeldata.cidx=request.body.cidx;
+  modeldata.labelcolid=request.body.labelcolid;
+  modeldata.type=type;
+  delete modeldata.norun;
+  console.log(request.body)
+  //GPUws.send("id#"+id)
+  // 设置响应体
+  if(taskidpointer>200)
+  {
+    taskmap.delete((taskidpointer-200));
+  }
+  taskidpointer=taskidpointer+1;
+  taskmap.set(taskidpointer,modeldata)
+
+  tasklist.push({taskid:taskidpointer,userid:id})
+  console.log(taskmap)
+  response.send({status:"success",taskid:taskidpointer});
+    
+  } catch (error) {
+    console.log(error)
+  }
+ 
+});
 app.get('/ajax/checkresult',jsonParser,(request, response) => {
   try {
   // 设置响应头  设置允许跨域
@@ -335,6 +373,10 @@ app.get('/ajax/checkresult',jsonParser,(request, response) => {
       resultdata=resultmap.get(taskid+"_nn_p")
     else if(type=="nn_pl")
       resultdata=resultmap.get(taskid+"_nn_pl")
+    else if(type=="lgbm_cm")
+      resultdata=resultmap.get(taskid+"_lgbm_cm")
+    else if(type=="nn_cm")
+      resultdata=resultmap.get(taskid+"_nn_cm")
     //console.log(resultdata)
     if(resultdata!=null)
     {
@@ -418,12 +460,16 @@ app.get('/ajax/getbyoutput',jsonParser,(request, response) => {
       resultdata=resultmap.get(taskid+"_nncol")
     else if(type=="lgbmrow")
       resultdata=resultmap.get(taskid+"_lgbmrow")
+    else if(type=="lgbm_cm")
+      resultdata=resultmap.get(taskid+"_lgbm_cm")
     else if(type=="nnrow")
       resultdata=resultmap.get(taskid+"_nnrow")
     else if(type=="nn_p")
       resultdata=resultmap.get(taskid+"_nn_p")
     else if(type=="nn_pl")
       resultdata=resultmap.get(taskid+"_nn_pl")
+    else if(type=="nn_cm")
+      resultdata=resultmap.get(taskid+"_nn_cm")
     //console.log(resultdata)
     if(resultdata!=null)
     {
@@ -714,6 +760,14 @@ app.post('/py/returndata',jsonParser,async(request, response) => {
   else if(request.body.type=="nn_pl")
   {
     resultmap.set(taskid+"_nn_pl",request.body)
+  }
+  else if(request.body.type=="lgbm_cm")
+  {
+    resultmap.set(taskid+"_lgbm_cm",request.body)
+  }
+  else if(request.body.type=="nn_cm")
+  {
+    resultmap.set(taskid+"_nn_cm",request.body)
   }
   return response.json({status:"success"})
   
