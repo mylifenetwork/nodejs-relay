@@ -6,7 +6,7 @@ var jsonParser = bodyParser.json()
 const { Configuration, OpenAIApi } = require("openai");
 const app = express();
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 testopenai()
