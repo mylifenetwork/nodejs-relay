@@ -177,6 +177,7 @@ app.post('/ajax/sendmodelrow',jsonParser,(request, response) => {
   modeldata.idcolid=request.body.idcolid;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  modeldata.maintaskid=maintaskid;
   delete modeldata.norun; 
   //console.log(dataset)
   // resultmap.delete(id+"_lgbmcol")
@@ -217,6 +218,7 @@ app.post('/ajax/sendmodelp',jsonParser,(request, response) => {
   modeldata.cidx=request.body.cidx;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  modeldata.maintaskid=maintaskid;
   delete modeldata.norun;
   if(request.body.hasOwnProperty("output"))
   {
@@ -265,6 +267,7 @@ app.post('/ajax/sendmodelpl',jsonParser,(request, response) => {
   modeldata.idcolid=request.body.idcolid;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  modeldata.maintaskid=maintaskid;
   delete modeldata.norun; 
   if(request.body.hasOwnProperty("output"))
   {
@@ -311,6 +314,7 @@ app.post('/ajax/sendmodelcm',jsonParser,(request, response) => {
   modeldata.cidx=request.body.cidx;
   modeldata.labelcolid=request.body.labelcolid;
   modeldata.type=type;
+  modeldata.maintaskid=maintaskid;
   delete modeldata.norun;
   console.log(request.body)
   //GPUws.send("id#"+id)
