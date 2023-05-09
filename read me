@@ -1,0 +1,21 @@
+Note: start vpn first then start relayer because of chatgpt initialization
+
+@1 
+Steps to start vpn
+1. cd /etc/openvpn
+2. sudo openvpn --config us-ash.prod.surfshark.com_tcp.ovpn –daemon
+3. input account and password
+4. if it shows  “Initialization Sequence Completed” means success
+
+@2
+Steps to start relayer
+1.	cd /root/projects/xainodejs
+2.	pm2 start ./bin/www -i 1
+3.	then if it shows a table means success
+4.	pm2 logs
+this can show logs of relayer
+5.	if need restart relayer：
+pm2 kill
+then 
+cd /root/projects/xainodejs
+pm2 start ./bin/www -i 1
