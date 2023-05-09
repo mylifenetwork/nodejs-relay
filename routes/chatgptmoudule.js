@@ -5,6 +5,8 @@ let bodyParser = require('body-parser');
 var jsonParser = bodyParser.json()
 const { Configuration, OpenAIApi } = require("openai");
 const app = express();
+const dotenv = require("dotenv")
+dotenv.config()
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
