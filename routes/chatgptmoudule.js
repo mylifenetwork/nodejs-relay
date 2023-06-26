@@ -38,12 +38,12 @@ async function testopenai()
 
 
 
-app.get('/ask',jsonParser,async(request, response) => {
+app.post('/ask',jsonParser,async(request, response) => {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.query)
-    var params = request.query
-    var question=params.question;
+    console.log(request.body.question)
+    // var params = request.body
+    var question=request.body.question;
     try{
         const completion = await openai.createChatCompletion({
             // model: "gpt-3.5-turbo",
@@ -65,7 +65,7 @@ app.get('/ask',jsonParser,async(request, response) => {
           } else {
             console.log(error.message);
           }
-        response.json({error:error.response.status})
+        response.json({answer:error.response.data})
     }
     
   });
