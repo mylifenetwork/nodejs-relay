@@ -108,9 +108,7 @@ app.post('/ajax/sendmodel', jsonParser, (request, response) => {
     resultmap.delete(id + "_nn")
     resultmap.delete(id + "_nncol")
   }
-  if (type == "rnn") {
-    resultmap.delete(id + "_rnn")
-  }
+
   //GPUws.send("id#"+id)
   if (taskidpointer > 200) {
     taskmap.delete((taskidpointer - 200));
@@ -222,14 +220,6 @@ app.post('/ajax/sendmodelp', jsonParser, (request, response) => {
       console.log(request.body.output)
       modeldata.output = request.body.output;
     }
-    if (request.body.hasOwnProperty("sampleidx")) {
-      console.log(request.body.sampleidx)
-      modeldata.sampleidx = request.body.sampleidx;
-    }
-    if (request.body.hasOwnProperty("featureidx")) {
-      console.log(request.body.featureidx)
-      modeldata.featureidx = request.body.featureidx;
-    }
 
     //console.log(dataset)
     // resultmap.delete(id+"_lgbmcol")
@@ -277,15 +267,6 @@ app.post('/ajax/sendmodelpl', jsonParser, (request, response) => {
       console.log(request.body.output)
       modeldata.output = request.body.output;
     }
-    if (request.body.hasOwnProperty("sampleidx")) {
-      console.log(request.body.sampleidx)
-      modeldata.sampleidx = request.body.sampleidx;
-    }
-    if (request.body.hasOwnProperty("featureidx")) {
-      console.log(request.body.featureidx)
-      modeldata.featureidx = request.body.featureidx;
-    }
-
     //console.log(dataset)
     // resultmap.delete(id+"_lgbmcol")
     // resultmap.delete(id+"_nncol")
@@ -433,39 +414,15 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_lgbm_ms")
       else if (type == "nn_ms")
         resultdata = resultmap.get(taskid + "_nn_ms")
-      else if (type == "rnn")
-        resultdata = resultmap.get(taskid + "_rnn")
-      else if (type == "rnnrow")
-        resultdata = resultmap.get(taskid + "_rnnrow")
-      else if (type == "rnn_p")
-        resultdata = resultmap.get(taskid + "_rnn_p")
-      else if (type == "rnn_pl")
-        resultdata = resultmap.get(taskid + "_rnn_pl")
       //console.log(resultdata)
       if (resultdata != null) {
-        var typetemp = "";
-        if (type.indexOf("nn") != -1)
-          typetemp = "nn";
-        if (type.indexOf("lgbm") != -1)
-          typetemp = "lgbm";
-        if (type.indexOf("rnn") != -1)
-          typetemp = "rnn";
         var dataforsend = { ...resultdata };
         if (dataforsend.hasOwnProperty("outputlen")) {
           var len = parseInt(dataforsend.outputlen);
           for (var i = 0; i < len; i++) {
             if (i != 0) {
-              delete dataforsend[typetemp + "_summary_plot_" + i]
-              delete dataforsend[typetemp + "_decision_plot_" + i]
-            }
-            if (dataforsend.hasOwnProperty("samplelen")) {
-              var samplelen = parseInt(dataforsend.samplelen);
-              for (var n = 0; n < samplelen; n++) {
-                if (!(n == 0 && i == 0)) {
-                  delete dataforsend[typetemp + "_summary_plot_" + i + "_" + n]
-                  delete dataforsend[typetemp + "_decision_plot_" + i + "_" + n]
-                }
-              }
+              delete dataforsend[type + "_summary_plot_" + i]
+              delete dataforsend[type + "_decision_plot_" + i]
             }
             if ((type == "nn_p" || type == "nn_pl") && (modeldata.hasOwnProperty("output") && modeldata.output != i)) {
               var typetemp = "nn";
@@ -484,7 +441,6 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
         else
           response.json(resultdata)
       }
-     
 
       else if (resultdata == null && modeldata != null && modeldata.running == 1)
         response.json({ status: "running" });
@@ -502,7 +458,7 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.query)
+    //console.log(request.query)
     var params = request.query
     //var userid=params.userid;
     var userid = request.session.user.id;
@@ -510,9 +466,6 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
     var taskid = parseInt(params.taskid);
     var type = params.type;
     var pos = params.pos;
-    var samplepos = -1;
-    if (params.hasOwnProperty("samplepos"))
-      samplepos = params.samplepos
     var subtaskid = parseInt(params.subtaskid);
     var subtype = params.subtype
     console.log(userid + "_" + type + "_" + taskid)
@@ -551,69 +504,28 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_nn_ms")
       else if (type == "lgbm_ms")
         resultdata = resultmap.get(taskid + "_lgbm_ms")
-      else if (type == "rnn")
-        resultdata = resultmap.get(taskid + "_rnn")
-      else if (type == "rnnrow")
-        resultdata = resultmap.get(taskid + "_rnnrow")
-      else if (type == "rnn_p")
-        resultdata = resultmap.get(taskid + "_rnn_p")
-      else if (type == "rnn_pl")
-        resultdata = resultmap.get(taskid + "_rnn_pl")
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
         if (type.indexOf("nn") != -1)
           typetemp = "nn";
-        if (type.indexOf("lgbm") != -1)
+        else if (type.indexOf("lgbm") != -1)
           typetemp = "lgbm";
-        if (type.indexOf("rnn") != -1)
-          typetemp = "rnn";
-        var summary_plot = null;
-        var decision_plot = null;
-        console.log(typetemp)
-        // console.log(resultdata)
-        if (typetemp == "rnn") {
-          summary_plot = resultdata[typetemp + "_summary_plot_" + pos + "_" + samplepos];
-          decision_plot = resultdata[typetemp + "_decision_plot_" + pos + "_" + samplepos];
-          // console.log(summary_plot)
-          console.log(summary_plot == null)
-          console.log(decision_plot == null)
-          
-        }
-        else {
-          summary_plot = resultdata[typetemp + "_summary_plot_" + pos];
-          decision_plot = resultdata[typetemp + "_decision_plot_" + pos];
-        }
+        var summary_plot = resultdata[typetemp + "_summary_plot_" + pos];
+        var decision_plot = resultdata[typetemp + "_decision_plot_" + pos];
 
         if (subtaskid != -1) {
           var resultdata2 = resultmap.get(subtaskid + "_" + subtype)
           console.log(resultdata2)
-
+          var rawheaders = resultdata2.headers
+          var idx = parseInt(resultdata2.idx)
+          var header = rawheaders[idx]
+          var partial_dependence_plot = resultdata2[type + "_partial_dependence_plot_" + header + "_" + pos];
           if (type == "nnrow") {
             var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
-            var rawheaders = resultdata2.headers
-            var idx = parseInt(resultdata2.idx)
-            var header = rawheaders[idx]
-            var partial_dependence_plot = resultdata2[type + "_partial_dependence_plot_" + header + "_" + pos];
-            // response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot })
             response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot, waterfall_plot: waterfall_plot })
           }
-          if (type == "rnnrow") {
-            var sampleidx = resultdata2.sampleidx;
-            var featureidx = -1
-            // if (resultdata2.hasOwnProperty("featureidx"))
-            //   featureidx = resultdata2.featureidx;
-            var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
-            var partial_dependence_plot = null;
-            // if (featureidx == -1) {
-            //   partial_dependence_plot = resultdata2[type + "_partial_dependence_plot_" + sampleidx + "_" + pos];
-            // }
-            // else {
-            //   partial_dependence_plot = resultdata2[type + "_partial_dependence_plot_" + sampleidx + "_" + featureidx + "_" + pos];
-            // }
-            response.json({ summary_plot: summary_plot, decision_plot: decision_plot, waterfall_plot: waterfall_plot })
-          }
-
+          response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot })
 
         }
         else {
@@ -621,11 +533,7 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
             var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
             response.json({ summary_plot: summary_plot, decision_plot: decision_plot, waterfall_plot: waterfall_plot })
           }
-          if (type == "rnnrow") {
-            var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
-            response.json({ summary_plot: summary_plot, decision_plot: decision_plot, waterfall_plot: waterfall_plot })
-          }
-          // response.json({ summary_plot: summary_plot, decision_plot: decision_plot })
+          response.json({ summary_plot: summary_plot, decision_plot: decision_plot })
         }
 
       }
@@ -639,7 +547,6 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
     }
   } catch (error) {
     console.log(error)
-    response.json({ error: error });
   }
 
 });
@@ -711,11 +618,7 @@ app.get('/ajax/getdetailproject', jsonParser, async (request, response) => {
     var userid = request.session.user.id;
     const records = await getDetailProject(userid, dashboardid);
     var taskid = await createtask(records, userid)
-    if (records.type == "rnn") {
-      response.json({ name: records.name, type: records.type, recordid: records.recordid, taskid: taskid, datatensor: records.datatensor, labeltensor: records.labeltensor, featurenames: records.featurenames });
-    }
-    else
-      response.json({ dataset: records.dataset, name: records.name, type: records.type, idcolid: records.idcolid, labelcolid: records.labelcolid, recordid: records.recordid, taskid: taskid, sensitive: records.sensitive });
+    response.json({ dataset: records.dataset, name: records.name, type: records.type, idcolid: records.idcolid, labelcolid: records.labelcolid, recordid: records.recordid, taskid: taskid, sensitive: records.sensitive });
   } catch (error) {
     console.log(error)
   }
@@ -756,9 +659,6 @@ async function createtask(body, user) {
   }
   else if (body.type == "lgbm") {
     resultmap.set(taskid + "_lgbm", JSON.parse(records.json_data))
-  }
-  else if (body.type == "rnn") {
-    resultmap.set(taskid + "_rnn", JSON.parse(records.json_data))
   }
   //console.log(taskmap)
   // 设置响应体
@@ -804,11 +704,7 @@ app.get('/py/polling', jsonParser, (request, response) => {
   if ((taskidpointer > 0) && (taskidpointer > pytaskid)) {
     console.log("userid:" + taskmap.get(pytaskid + 1)["id"])
     console.log(taskmap.get(pytaskid + 1)["type"])
-    var hasfeaturenames = 0
-    if (taskmap.get(pytaskid + 1).hasOwnProperty("featurenames")&&taskmap.get(pytaskid + 1)["featurenames"]!=null) {
-      hasfeaturenames = 1;
-    }
-    response.json({ taskid: pytaskid + 1, userid: taskmap.get(pytaskid + 1)["id"], type: taskmap.get(pytaskid + 1).hasOwnProperty("type") ? taskmap.get(pytaskid + 1)["type"] : -1, dashboardid: taskmap.get(pytaskid + 1).hasOwnProperty("dashboardid") ? taskmap.get(pytaskid + 1)["dashboardid"] : -1, hasfeaturenames: hasfeaturenames })
+    response.json({ taskid: pytaskid + 1, userid: taskmap.get(pytaskid + 1)["id"], type: taskmap.get(pytaskid + 1).hasOwnProperty("type") ? taskmap.get(pytaskid + 1)["type"] : -1, dashboardid: taskmap.get(pytaskid + 1).hasOwnProperty("dashboardid") ? taskmap.get(pytaskid + 1)["dashboardid"] : -1 })
   }
   else {
     response.json({ taskid: taskidpointer, userid: "0", type: -1, dashboardid: -1 })
@@ -834,7 +730,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
       resultmap.set(taskid + "_nn", request.body)
       if (request.body.error == undefined) {
         record = await saveResult(userid, request.body.type, request.body);
-        project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
+        project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
         if (user === null)
@@ -853,7 +749,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
       if (request.body.error == undefined) {
         record = await saveResult(userid, request.body.type, request.body);
         console.log(record.dataValues)
-        project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
+        project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
         if (user === null)
@@ -865,24 +761,6 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
         }
 
       }
-    }
-    if (request.body.type == "rnn") {
-      resultmap.set(taskid + "_rnn", request.body)
-      if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body);
-        project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.featurenames)
-        //return response.json({status:"success",recordid:record.record_id})
-        const user = await User.findOne({ where: { id: userid } });
-        if (user === null)
-          console.log('user Not found!');
-        else {
-          var email = user.email;
-          console.log(email)
-          sendemail(email, modeldata.name, project.dataValues.createdAt.toString())
-        }
-      }
-
-
     }
     else if (request.body.type == "lgbmcol") {
       resultmap.set(taskid + "_lgbmcol", request.body)
@@ -942,15 +820,6 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
         oldrecord.json_data = JSON.stringify(jsondata);
         oldrecord.save({ fields: ['json_data'] })
       }
-    }
-    else if (request.body.type == "rnnrow") {
-      resultmap.set(taskid + "_rnnrow", request.body)
-    }
-    else if (request.body.type == "rnn_p") {
-      resultmap.set(taskid + "_rnn_p", request.body)
-    }
-    else if (request.body.type == "rnn_pl") {
-      resultmap.set(taskid + "_rnn_pl", request.body)
     }
     return response.json({ status: "success" })
 
@@ -1070,7 +939,7 @@ const Project = sequelize.define('project', {
   },
   dataset: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   model: {
     type: DataTypes.STRING,
@@ -1086,19 +955,7 @@ const Project = sequelize.define('project', {
   },
   sensitive: {
     type: DataTypes.STRING,
-    allowNull: true
-  },
-  datatensor: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  labeltensor: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  featurenames: {
-    type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   recordid: {
     type: DataTypes.INTEGER,
@@ -1174,9 +1031,9 @@ async function getProjectList(userid, type) {
   return projects;
 }
 
-async function saveProject(userid, name, type, dataset, model, idcolid, labelcolid, sensitivearray, recordid, datatensor, labeltensor, featurenames) {
+async function saveProject(userid, name, type, dataset, model, idcolid, labelcolid, sensitivearray, recordid) {
   let recordresult = -1;
-  const project = await Project.create({ dashboardid: 0, userid: userid, name: name, type: type, dataset: dataset, model: model, idcolid: idcolid, labelcolid: labelcolid, sensitive: sensitivearray, recordid: recordid, datatensor: datatensor, labeltensor: labeltensor, featurenames: featurenames }).then(result => {
+  const project = await Project.create({ dashboardid: 0, userid: userid, name: name, type: type, dataset: dataset, model: model, idcolid: idcolid, labelcolid: labelcolid, sensitive: sensitivearray, recordid: recordid }).then(result => {
     recordresult = result
   });
   console.log(recordid);
