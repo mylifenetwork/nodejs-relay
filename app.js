@@ -10,8 +10,8 @@ var chatgptRouter = require('./routes/chatgptmoudule');
 
 var app = express();
 var bodyParser = require('body-parser');
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.json({limit: '1000mb'}));
+app.use(bodyParser.urlencoded({limit: '1000mb', extended: true}));
 app.use(session({ resave: true ,secret: 'nongdingzhan' , saveUninitialized: true}));
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

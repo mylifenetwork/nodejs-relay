@@ -82,7 +82,7 @@ wss.on('request', function(request) {
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(clients))
 });
 */
-
+var maxtask=50
 app.post('/ajax/sendmodel', jsonParser, (request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -111,9 +111,12 @@ app.post('/ajax/sendmodel', jsonParser, (request, response) => {
   if (type == "rnn") {
     resultmap.delete(id + "_rnn")
   }
+  if (type == "cnn") {
+    resultmap.delete(id + "_cnn")
+  }
   //GPUws.send("id#"+id)
-  if (taskidpointer > 200) {
-    taskmap.delete((taskidpointer - 200));
+  if (taskidpointer > maxtask) {
+    taskmap.delete((taskidpointer - maxtask));
   }
   taskidpointer = taskidpointer + 1;
   taskmap.set(taskidpointer, request.body)
@@ -145,8 +148,8 @@ app.post('/ajax/sendmodelcol', jsonParser, (request, response) => {
     console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
-    if (taskidpointer > 200) {
-      taskmap.delete((taskidpointer - 200));
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -171,7 +174,12 @@ app.post('/ajax/sendmodelrow', jsonParser, (request, response) => {
     var maintaskid = request.body.maintaskid;
     var type = request.body.type;
     var modeldata = { ...taskmap.get(maintaskid) };
-    modeldata.jsondata = request.body.jsondata;
+    if (request.body.hasOwnProperty("jsondata")) {
+      modeldata.jsondata = request.body.jsondata;
+    }
+    if (request.body.hasOwnProperty("index")) {
+      modeldata.index = request.body.index;
+    }
     modeldata.colid = request.body.colid;
     modeldata.idcolid = request.body.idcolid;
     modeldata.labelcolid = request.body.labelcolid;
@@ -184,8 +192,8 @@ app.post('/ajax/sendmodelrow', jsonParser, (request, response) => {
     console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
-    if (taskidpointer > 200) {
-      taskmap.delete((taskidpointer - 200));
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -237,8 +245,8 @@ app.post('/ajax/sendmodelp', jsonParser, (request, response) => {
     console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
-    if (taskidpointer > 200) {
-      taskmap.delete((taskidpointer - 200));
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -292,8 +300,8 @@ app.post('/ajax/sendmodelpl', jsonParser, (request, response) => {
     console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
-    if (taskidpointer > 200) {
-      taskmap.delete((taskidpointer - 200));
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -330,8 +338,8 @@ app.post('/ajax/sendmodelcm', jsonParser, (request, response) => {
     console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
-    if (taskidpointer > 200) {
-      taskmap.delete((taskidpointer - 200));
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -370,8 +378,44 @@ app.post('/ajax/sendmodelms', jsonParser, async (request, response) => {
 
     //GPUws.send("id#"+id)
     // 设置响应体
-    if (taskidpointer > 200) {
-      taskmap.delete((taskidpointer - 200));
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
+    }
+    taskidpointer = taskidpointer + 1;
+    taskmap.set(taskidpointer, modeldata)
+
+    tasklist.push({ taskid: taskidpointer, userid: id })
+    console.log(taskmap)
+    response.send({ status: "success", taskid: taskidpointer });
+
+  } catch (error) {
+    console.log(error)
+  }
+
+});
+app.post('/ajax/sendmodelib', jsonParser, async (request, response) => {
+  try {
+    // 设置响应头  设置允许跨域
+    response.setHeader('Accss-Control-Allow-Origin', '*');
+    console.log(request.body)
+    //var id=request.body.id;
+    var id = request.session.user.id;
+    request.body.id = id.toString();
+    var maintaskid = request.body.maintaskid;
+    var type = request.body.type;
+    var modeldata = { ...taskmap.get(maintaskid) };
+    //modeldata.jsondata=request.body.jsondata;
+    // modeldata.colid=request.body.colid;
+    modeldata.type = type;
+    modeldata.maintaskid = maintaskid;
+    delete modeldata.norun;
+    console.log(request.body)
+
+
+    //GPUws.send("id#"+id)
+    // 设置响应体
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -441,6 +485,12 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_rnn_p")
       else if (type == "rnn_pl")
         resultdata = resultmap.get(taskid + "_rnn_pl")
+      else if (type == "rnn_ib")
+        resultdata = resultmap.get(taskid + "_rnn_ib")
+      else if (type == "cnn")
+        resultdata = resultmap.get(taskid + "_cnn")
+      else if (type == "cnnrow")
+        resultdata = resultmap.get(taskid + "_cnnrow")
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
@@ -495,6 +545,7 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
     }
   } catch (error) {
     console.log(error)
+    response.json({ status: "empty" });
   }
 });
 
@@ -559,6 +610,12 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_rnn_p")
       else if (type == "rnn_pl")
         resultdata = resultmap.get(taskid + "_rnn_pl")
+      else if (type == "rnn_ib")
+        resultdata = resultmap.get(taskid + "_rnn_ib")
+      else if (type == "cnn")
+        resultdata = resultmap.get(taskid + "_cnn")
+      else if (type == "cnnrow")
+        resultdata = resultmap.get(taskid + "_cnnrow")
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
@@ -598,6 +655,14 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
             // response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot })
             response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot, waterfall_plot: waterfall_plot })
           }
+          if (type == "nn") {
+            var rawheaders = resultdata2.headers
+            var idx = parseInt(resultdata2.idx)
+            var header = rawheaders[idx]
+            var partial_dependence_plot = resultdata2[type + "_partial_dependence_plot_" + header + "_" + pos];
+            // response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot })
+            response.json({ summary_plot: summary_plot, decision_plot: decision_plot, partial_dependence_plot: partial_dependence_plot, waterfall_plot: waterfall_plot })
+          }
           if (type == "rnnrow") {
             var sampleidx = resultdata2.sampleidx;
             var featureidx = -1
@@ -621,6 +686,11 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
             var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
             response.json({ summary_plot: summary_plot, decision_plot: decision_plot, waterfall_plot: waterfall_plot })
           }
+          if (type == "nn"||type == "rnn") {
+            // var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
+            response.json({ summary_plot: summary_plot, decision_plot: decision_plot})
+          }
+          
           if (type == "rnnrow") {
             var waterfall_plot = resultdata[typetemp + "_waterfall_plot_" + pos];
             response.json({ summary_plot: summary_plot, decision_plot: decision_plot, waterfall_plot: waterfall_plot })
@@ -714,6 +784,9 @@ app.get('/ajax/getdetailproject', jsonParser, async (request, response) => {
     if (records.type == "rnn") {
       response.json({ name: records.name, type: records.type, recordid: records.recordid, taskid: taskid, datatensor: records.datatensor, labeltensor: records.labeltensor, featurenames: records.featurenames });
     }
+    else if (records.type == "cnn") {
+      response.json({ name: records.name, type: records.type, recordid: records.recordid, taskid: taskid});
+    }
     else
       response.json({ dataset: records.dataset, name: records.name, type: records.type, idcolid: records.idcolid, labelcolid: records.labelcolid, recordid: records.recordid, taskid: taskid, sensitive: records.sensitive });
   } catch (error) {
@@ -732,8 +805,8 @@ async function createtask(body, user) {
   body.id = id.toString();
   var type = body.type;
   //map.set(id,request.body)
-  if (taskidpointer > 200) {
-    taskmap.delete((taskidpointer - 200));
+  if (taskidpointer > maxtask) {
+    taskmap.delete((taskidpointer - maxtask));
   }
   taskidpointer = taskidpointer + 1;
 
@@ -752,13 +825,15 @@ async function createtask(body, user) {
   //console.log(records)
   if (body.type == "nn") {
     resultmap.set(taskid + "_nn", JSON.parse(records.json_data))
-
   }
   else if (body.type == "lgbm") {
     resultmap.set(taskid + "_lgbm", JSON.parse(records.json_data))
   }
   else if (body.type == "rnn") {
     resultmap.set(taskid + "_rnn", JSON.parse(records.json_data))
+  }
+  else if (body.type == "cnn") {
+    resultmap.set(taskid + "_cnn", JSON.parse(records.json_data))
   }
   //console.log(taskmap)
   // 设置响应体
@@ -781,6 +856,9 @@ app.get('/py/getdata', jsonParser, (request, response) => {
     if (need == 0) {
       delete modeldata.model;
       delete modeldata.dataset;
+      delete modeldata.datatensor;
+      delete modeldata.labeltensor;
+      delete modeldata.featurenames;
     }
     response.json(modeldata)
     modeldata["running"] = 1
@@ -833,7 +911,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     if (request.body.type == "nn") {
       resultmap.set(taskid + "_nn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body);
+        record = await saveResult(userid, request.body.type, request.body,null);
         project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
@@ -851,7 +929,10 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "lgbm") {
       resultmap.set(taskid + "_lgbm", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body);
+        var overall_story=null;
+        if(request.body.hasOwnProperty("overall_story"))
+          overall_story=request.body.overall_story;
+        record = await saveResult(userid, request.body.type, request.body,overall_story);
         console.log(record.dataValues)
         project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
         //return response.json({status:"success",recordid:record.record_id})
@@ -866,11 +947,29 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
 
       }
     }
-    if (request.body.type == "rnn") {
+    else if (request.body.type == "rnn") {
       resultmap.set(taskid + "_rnn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body);
+        record = await saveResult(userid, request.body.type, request.body,null);
         project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.featurenames)
+        //return response.json({status:"success",recordid:record.record_id})
+        const user = await User.findOne({ where: { id: userid } });
+        if (user === null)
+          console.log('user Not found!');
+        else {
+          var email = user.email;
+          console.log(email)
+          sendemail(email, modeldata.name, project.dataValues.createdAt.toString())
+        }
+      }
+
+
+    }
+    else if (request.body.type == "cnn") {
+      resultmap.set(taskid + "_cnn", request.body)
+      if (request.body.error == undefined) {
+        record = await saveResult(userid, request.body.type, request.body,null);
+        project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
         if (user === null)
@@ -952,6 +1051,12 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "rnn_pl") {
       resultmap.set(taskid + "_rnn_pl", request.body)
     }
+    else if (request.body.type == "rnn_ib") {
+      resultmap.set(taskid + "_rnn_ib", request.body)
+    }
+    else if (request.body.type == "cnnrow") {
+      resultmap.set(taskid + "_cnnrow", request.body)
+    }
     return response.json({ status: "success" })
 
   } catch (error) {
@@ -1003,7 +1108,10 @@ const Record = sequelize.define('record', {
     type: DataTypes.STRING,
     allowNull: false
   },
-
+  overall_story:{
+    type: DataTypes.STRING,
+    allowNull: false
+  },
 }, {
   // 这是其他模型参数
 });
@@ -1011,9 +1119,9 @@ const Record = sequelize.define('record', {
 // `sequelize.define` 会返回模型
 console.log(Record === sequelize.models.Record);
 
-async function saveResult(userid, type, resultdata) {
+async function saveResult(userid, type, resultdata,overall_story) {
   let recordresult = -1;
-  const record = await Record.create({ record_id: 0, user_id: userid, type: type, json_data: JSON.stringify(resultdata) }).then(result => {
+  const record = await Record.create({ record_id: 0, user_id: userid, type: type, json_data: JSON.stringify(resultdata) ,overall_story: JSON.stringify(overall_story)}).then(result => {
     recordresult = result
   });
   console.log(recordresult);
