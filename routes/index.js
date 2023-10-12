@@ -82,7 +82,7 @@ wss.on('request', function(request) {
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(clients))
 });
 */
-var maxtask=50
+var maxtask=80
 app.post('/ajax/sendmodel', jsonParser, (request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -117,6 +117,14 @@ app.post('/ajax/sendmodel', jsonParser, (request, response) => {
   //GPUws.send("id#"+id)
   if (taskidpointer > maxtask) {
     taskmap.delete((taskidpointer - maxtask));
+    Object.keys(resultmap).forEach(function (key) {
+          if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+          {
+            console.log("delete:->"+key)
+            resultmap.delete(key)
+          }
+           
+       });
   }
   taskidpointer = taskidpointer + 1;
   taskmap.set(taskidpointer, request.body)
@@ -150,6 +158,14 @@ app.post('/ajax/sendmodelcol', jsonParser, (request, response) => {
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -167,7 +183,7 @@ app.post('/ajax/sendmodelrow', jsonParser, (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.body)
+    // console.log(request.body)
     //var id=request.body.id;
     var id = request.session.user.id;
     request.body.id = id.toString();
@@ -189,11 +205,19 @@ app.post('/ajax/sendmodelrow', jsonParser, (request, response) => {
     //console.log(dataset)
     // resultmap.delete(id+"_lgbmcol")
     // resultmap.delete(id+"_nncol")
-    console.log(request.body)
+    // console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -211,7 +235,7 @@ app.post('/ajax/sendmodelp', jsonParser, (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.body)
+    // console.log(request.body)
     //var id=request.body.id;
     var id = request.session.user.id;
     request.body.id = id.toString();
@@ -242,11 +266,19 @@ app.post('/ajax/sendmodelp', jsonParser, (request, response) => {
     //console.log(dataset)
     // resultmap.delete(id+"_lgbmcol")
     // resultmap.delete(id+"_nncol")
-    console.log(request.body)
+    // console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -264,7 +296,7 @@ app.post('/ajax/sendmodelpl', jsonParser, (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.body)
+    // console.log(request.body)
     //var id=request.body.id;
     var id = request.session.user.id;
     request.body.id = id.toString();
@@ -297,11 +329,19 @@ app.post('/ajax/sendmodelpl', jsonParser, (request, response) => {
     //console.log(dataset)
     // resultmap.delete(id+"_lgbmcol")
     // resultmap.delete(id+"_nncol")
-    console.log(request.body)
+    // console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -320,7 +360,7 @@ app.post('/ajax/sendmodelcm', jsonParser, (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.body)
+    // console.log(request.body)
     //var id=request.body.id;
     var id = request.session.user.id;
     request.body.id = id.toString();
@@ -335,11 +375,19 @@ app.post('/ajax/sendmodelcm', jsonParser, (request, response) => {
     modeldata.type = type;
     modeldata.maintaskid = maintaskid;
     delete modeldata.norun;
-    console.log(request.body)
+    // console.log(request.body)
     //GPUws.send("id#"+id)
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -357,7 +405,7 @@ app.post('/ajax/sendmodelms', jsonParser, async (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request.body)
+    // console.log(request.body)
     //var id=request.body.id;
     var id = request.session.user.id;
     request.body.id = id.toString();
@@ -373,13 +421,21 @@ app.post('/ajax/sendmodelms', jsonParser, async (request, response) => {
     modeldata.maintaskid = maintaskid;
     modeldata.sensitivearray = request.body.sensitivearray;
     delete modeldata.norun;
-    console.log(request.body)
+    // console.log(request.body)
 
 
     //GPUws.send("id#"+id)
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -416,6 +472,14 @@ app.post('/ajax/sendmodelib', jsonParser, async (request, response) => {
     // 设置响应体
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
     }
     taskidpointer = taskidpointer + 1;
     taskmap.set(taskidpointer, modeldata)
@@ -858,7 +922,16 @@ app.get('/py/getdata', jsonParser, (request, response) => {
       delete modeldata.dataset;
       delete modeldata.datatensor;
       delete modeldata.labeltensor;
-      delete modeldata.featurenames;
+      if(modeldata.hasOwnProperty("featurenames"))
+      {
+        delete modeldata.featurenames;
+        modeldata.hasfeaturenames=1
+      }
+       
+    }
+    if(modeldata.hasOwnProperty("featurenames"))
+    {
+      modeldata.hasfeaturenames=1
     }
     response.json(modeldata)
     modeldata["running"] = 1
@@ -898,7 +971,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
   try {
     // 设置响应头  设置允许跨域
     response.setHeader('Accss-Control-Allow-Origin', '*');
-    console.log(request)
+    // console.log(request)
     var params = request.body
     var userid = params.userid;
     var taskid = parseInt(params.taskid)
@@ -951,7 +1024,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
       resultmap.set(taskid + "_rnn", request.body)
       if (request.body.error == undefined) {
         record = await saveResult(userid, request.body.type, request.body,null);
-        project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.featurenames)
+        project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.hasOwnProperty("featurenames")?modeldata.featurenames : null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
         if (user === null)
@@ -969,7 +1042,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
       resultmap.set(taskid + "_cnn", request.body)
       if (request.body.error == undefined) {
         record = await saveResult(userid, request.body.type, request.body,null);
-        project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, null)
+        project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.hasOwnProperty("featurenames")?modeldata.featurenames : null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
         if (user === null)
