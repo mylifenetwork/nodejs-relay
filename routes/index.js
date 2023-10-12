@@ -1078,8 +1078,8 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
 // });
 
 
-const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
-  host: '127.0.0.1',
+const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
+  host: '3.138.247.214',
   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
   timezone: '+08:00',
   dialectOptions: {

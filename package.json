@@ -19,6 +19,7 @@
     "mysql2": "^3.1.0",
     "openai": "^3.2.1",
     "sequelize": "^6.28.0",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "xhr2": "^0.2.0"
   }
 }
