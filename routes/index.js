@@ -984,7 +984,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     if (request.body.type == "nn") {
       resultmap.set(taskid + "_nn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body,null);
+        record = await saveResult(userid, request.body.type, request.body,null,null);
         project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
@@ -1002,10 +1002,15 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "lgbm") {
       resultmap.set(taskid + "_lgbm", request.body)
       if (request.body.error == undefined) {
-        var overall_story=null;
+        var overall_story = null;
         if(request.body.hasOwnProperty("overall_story"))
-          overall_story=request.body.overall_story;
-        record = await saveResult(userid, request.body.type, request.body,overall_story);
+          overall_story = request.body.overall_story;
+        
+        var global_explainer_story = null;
+        if (request.body.hasOwnProperty("global_explainer_story"))
+          global_explainer_story = request.body.global_explainer_story;
+        
+        record = await saveResult(userid, request.body.type, request.body,overall_story,global_explainer_story);
         console.log(record.dataValues)
         project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
         //return response.json({status:"success",recordid:record.record_id})
@@ -1023,7 +1028,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "rnn") {
       resultmap.set(taskid + "_rnn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body,null);
+        record = await saveResult(userid, request.body.type, request.body,null,null);
         project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.hasOwnProperty("featurenames")?modeldata.featurenames : null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
@@ -1041,7 +1046,7 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "cnn") {
       resultmap.set(taskid + "_cnn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body,null);
+        record = await saveResult(userid, request.body.type, request.body,null,null);
         project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.hasOwnProperty("featurenames")?modeldata.featurenames : null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
@@ -1151,8 +1156,8 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
 // });
 
 
-const sequelize = new Sequelize('shapdatabase', 'root', 'Glassbox0128@', {
-  host: '127.0.0.1',
+const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
+  host: '3.138.247.214',
   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
   timezone: '+08:00',
   dialectOptions: {
@@ -1185,6 +1190,10 @@ const Record = sequelize.define('record', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  global_explainer_story:{
+    type: DataTypes.STRING,
+    allowNull: false
+  }
 }, {
   // 这是其他模型参数
 });
@@ -1192,9 +1201,9 @@ const Record = sequelize.define('record', {
 // `sequelize.define` 会返回模型
 console.log(Record === sequelize.models.Record);
 
-async function saveResult(userid, type, resultdata,overall_story) {
+async function saveResult(userid, type, resultdata, overall_story, global_explainer_story) {
   let recordresult = -1;
-  const record = await Record.create({ record_id: 0, user_id: userid, type: type, json_data: JSON.stringify(resultdata) ,overall_story: JSON.stringify(overall_story)}).then(result => {
+  const record = await Record.create({ record_id: 0, user_id: userid, type: type, json_data: JSON.stringify(resultdata), overall_story: JSON.stringify(overall_story), global_explainer_story: JSON.stringify(global_explainer_story)}).then(result => {
     recordresult = result
   });
   console.log(recordresult);
