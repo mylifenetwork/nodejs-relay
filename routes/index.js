@@ -984,7 +984,15 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     if (request.body.type == "nn") {
       resultmap.set(taskid + "_nn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body,null,null);
+        var overall_story = null;
+        if (request.body.hasOwnProperty("overall_story"))
+          overall_story = request.body.overall_story;
+
+        var global_explainer_story = null;
+        if (request.body.hasOwnProperty("global_explainer_story"))
+          global_explainer_story = request.body.global_explainer_story;
+
+        record = await saveResult(userid, request.body.type, request.body, overall_story, global_explainer_story);
         project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
@@ -1028,7 +1036,15 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "rnn") {
       resultmap.set(taskid + "_rnn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body,null,null);
+        var overall_story = null;
+        if (request.body.hasOwnProperty("overall_story"))
+          overall_story = request.body.overall_story;
+
+        var global_explainer_story = null;
+        if (request.body.hasOwnProperty("global_explainer_story"))
+          global_explainer_story = request.body.global_explainer_story;
+
+        record = await saveResult(userid, request.body.type, request.body, overall_story, global_explainer_story);
         project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.hasOwnProperty("featurenames")?modeldata.featurenames : null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
@@ -1046,7 +1062,15 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "cnn") {
       resultmap.set(taskid + "_cnn", request.body)
       if (request.body.error == undefined) {
-        record = await saveResult(userid, request.body.type, request.body,null,null);
+        var overall_story = null;
+        if (request.body.hasOwnProperty("overall_story"))
+          overall_story = request.body.overall_story;
+
+        var global_explainer_story = null;
+        if (request.body.hasOwnProperty("global_explainer_story"))
+          global_explainer_story = request.body.global_explainer_story;
+
+        record = await saveResult(userid, request.body.type, request.body, overall_story, global_explainer_story);
         project = await saveProject(userid, modeldata.name, modeldata.type, null, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + "]", record.dataValues.record_id, modeldata.datatensor, modeldata.labeltensor, modeldata.hasOwnProperty("featurenames")?modeldata.featurenames : null)
         //return response.json({status:"success",recordid:record.record_id})
         const user = await User.findOne({ where: { id: userid } });
