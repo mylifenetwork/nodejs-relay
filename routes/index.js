@@ -231,6 +231,64 @@ app.post('/ajax/sendmodelrow', jsonParser, (request, response) => {
   }
 
 });
+
+// handle DiCE
+app.post('/ajax/sendmodeldice', jsonParser, (request, response) => {
+  try {
+    // 设置响应头  设置允许跨域
+    response.setHeader('Accss-Control-Allow-Origin', '*');
+    var id = request.session.user.id;
+    request.body.id = id.toString();
+    var maintaskid = request.body.maintaskid;
+    var type = request.body.type;
+    var modeldata = { ...taskmap.get(maintaskid) };
+    if (request.body.hasOwnProperty("jsondata")) {
+      modeldata.jsondata = request.body.jsondata;
+    }
+    if (request.body.hasOwnProperty("selectedColumns")) {
+      modeldata.selectedColumns = request.body.selectedColumns;
+    }
+    if (request.body.hasOwnProperty("outputClass")) {
+      modeldata.outputClass = request.body.outputClass;
+    }
+    if (request.body.hasOwnProperty("index")) {
+      modeldata.index = request.body.index;
+    }
+    modeldata.colid = request.body.colid;
+    modeldata.idcolid = request.body.idcolid;
+    modeldata.labelcolid = request.body.labelcolid;
+    modeldata.type = type;
+    modeldata.maintaskid = maintaskid;
+    delete modeldata.norun;
+    //console.log(dataset)
+    // resultmap.delete(id+"_lgbmcol")
+    // resultmap.delete(id+"_nncol")
+    // console.log(request.body)
+    //GPUws.send("id#"+id)
+    // 设置响应体
+    if (taskidpointer > maxtask) {
+      taskmap.delete((taskidpointer - maxtask));
+      Object.keys(resultmap).forEach(function (key) {
+        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        {
+          console.log("delete:->"+key)
+          resultmap.delete(key)
+        }
+         
+     });
+    }
+    taskidpointer = taskidpointer + 1;
+    taskmap.set(taskidpointer, modeldata)
+
+    tasklist.push({ taskid: taskidpointer, userid: id })
+    response.send({ status: "success", taskid: taskidpointer });
+
+  } catch (error) {
+    console.log(error)
+  }
+
+});
+
 app.post('/ajax/sendmodelp', jsonParser, (request, response) => {
   try {
     // 设置响应头  设置允许跨域
@@ -555,6 +613,9 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_cnn")
       else if (type == "cnnrow")
         resultdata = resultmap.get(taskid + "_cnnrow")
+      else if (type == "dice")
+        resultdata = resultmap.get(taskid + "_dice")
+
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
@@ -680,6 +741,8 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_cnn")
       else if (type == "cnnrow")
         resultdata = resultmap.get(taskid + "_cnnrow")
+      else if (type == "dice")
+        resultdata = resultmap.get(taskid + "_dice")
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
@@ -1130,6 +1193,9 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "cnnrow") {
       resultmap.set(taskid + "_cnnrow", request.body)
     }
+    else if (request.body.type == "dice") {
+      resultmap.set(taskid + "_dice", request.body)
+    }
     return response.json({ status: "success" })
 
   } catch (error) {
@@ -1138,10 +1204,9 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
 
 
 });
-//47.242.115.75
-// Glassbox0128@
+// // Glassbox0128@
 // const sequelize = new Sequelize('shapdatabase', 'admin', 'Glassbox0128@', {
-//   host: '47.242.115.75',
+//   host: '3.138.247.214',
 //   dialect: 'mysql',/* 选择 'mysql' | 'mariadb' | 'postgres' | 'mssql' 其一 */
 //   timezone: '+08:00',
 //   dialectOptions: {
