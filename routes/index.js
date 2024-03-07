@@ -103,7 +103,14 @@ app.post('/ajax/sendmodel', jsonParser, (request, response) => {
     resultmap.delete(id + "_lgbm")
     resultmap.delete(id + "_lgbmcol")
   }
-
+  if (type == "regression") {
+    resultmap.delete(id + "_regression")
+    resultmap.delete(id + "_regressioncol")
+  }
+  if (type == "decisiontree") {
+    resultmap.delete(id + "_decisiontree")
+    resultmap.delete(id + "_decisiontreecol")
+  }
   if (type == "nn") {
     resultmap.delete(id + "_nn")
     resultmap.delete(id + "_nncol")
@@ -555,6 +562,30 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_cnn")
       else if (type == "cnnrow")
         resultdata = resultmap.get(taskid + "_cnnrow")
+      else if (type == "decisiontree")
+        resultdata = resultmap.get(taskid + "_decisiontree")
+      else if (type == "decisiontreerow")
+        resultdata = resultmap.get(taskid + "_decisiontreerow")
+      else if (type == "decisiontree_p")
+        resultdata = resultmap.get(taskid + "_decisiontree_p")
+      else if (type == "decisiontree_pl")
+        resultdata = resultmap.get(taskid + "_decisiontree_pl")
+      else if (type == "decisiontree_cm")
+        resultdata = resultmap.get(taskid + "_decisiontree_cm")
+      else if (type == "decisiontree_ms")
+        resultdata = resultmap.get(taskid + "_decisiontree_ms")
+      else if (type == "regression")
+        resultdata = resultmap.get(taskid + "_regression")
+      else if (type == "regressionrow")
+        resultdata = resultmap.get(taskid + "_regressionrow")
+      else if (type == "regression_p")
+        resultdata = resultmap.get(taskid + "_regression_p")
+      else if (type == "regression_pl")
+        resultdata = resultmap.get(taskid + "_regression_pl")
+      else if (type == "regression_cm")
+        resultdata = resultmap.get(taskid + "_regression_cm")
+      else if (type == "regression_ms")
+        resultdata = resultmap.get(taskid + "_regression_ms")
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
@@ -562,6 +593,10 @@ app.get('/ajax/checkresult', jsonParser, (request, response) => {
           typetemp = "nn";
         if (type.indexOf("lgbm") != -1)
           typetemp = "lgbm";
+        if (type.indexOf("decisiontree") != -1)
+          typetemp = "decisiontree";
+        if (type.indexOf("regression") != -1)
+          typetemp = "regression";
         if (type.indexOf("rnn") != -1)
           typetemp = "rnn";
         var dataforsend = { ...resultdata };
@@ -680,6 +715,30 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
         resultdata = resultmap.get(taskid + "_cnn")
       else if (type == "cnnrow")
         resultdata = resultmap.get(taskid + "_cnnrow")
+      else if (type == "decisiontree")
+        resultdata = resultmap.get(taskid + "_decisiontree")
+      else if (type == "decisiontreerow")
+        resultdata = resultmap.get(taskid + "_decisiontreerow")
+      else if (type == "decisiontree_p")
+        resultdata = resultmap.get(taskid + "_decisiontree_p")
+      else if (type == "decisiontree_pl")
+        resultdata = resultmap.get(taskid + "_decisiontree_pl")
+      else if (type == "decisiontree_cm")
+        resultdata = resultmap.get(taskid + "_decisiontree_cm")
+      else if (type == "decisiontree_ms")
+        resultdata = resultmap.get(taskid + "_decisiontree_ms")
+      else if (type == "regression")
+        resultdata = resultmap.get(taskid + "_regression")
+      else if (type == "regressionrow")
+        resultdata = resultmap.get(taskid + "_regressionrow")
+      else if (type == "regression_p")
+        resultdata = resultmap.get(taskid + "_regression_p")
+      else if (type == "regression_pl")
+        resultdata = resultmap.get(taskid + "_regression_pl")
+      else if (type == "regression_cm")
+        resultdata = resultmap.get(taskid + "_regression_cm")
+      else if (type == "regression_ms")
+        resultdata = resultmap.get(taskid + "_regression_ms")
       //console.log(resultdata)
       if (resultdata != null) {
         var typetemp = "";
@@ -687,6 +746,10 @@ app.get('/ajax/getbyoutput', jsonParser, (request, response) => {
           typetemp = "nn";
         if (type.indexOf("lgbm") != -1)
           typetemp = "lgbm";
+        if (type.indexOf("decisiontree") != -1)
+          typetemp = "decisiontree";
+        if (type.indexOf("regression") != -1)
+          typetemp = "regression";
         if (type.indexOf("rnn") != -1)
           typetemp = "rnn";
         var summary_plot = null;
@@ -893,6 +956,12 @@ async function createtask(body, user) {
   else if (body.type == "lgbm") {
     resultmap.set(taskid + "_lgbm", JSON.parse(records.json_data))
   }
+  else if (body.type == "decisiontree") {
+    resultmap.set(taskid + "_decisiontree", JSON.parse(records.json_data))
+  }
+  else if (body.type == "regression") {
+    resultmap.set(taskid + "_regression", JSON.parse(records.json_data))
+  }
   else if (body.type == "rnn") {
     resultmap.set(taskid + "_rnn", JSON.parse(records.json_data))
   }
@@ -1056,6 +1125,48 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
 
 
     }
+    else if (request.body.type == "decisiontree") {
+      resultmap.set(taskid + "_decisiontree", request.body)
+      if (request.body.error == undefined) {
+        var overall_story=null;
+        if(request.body.hasOwnProperty("overall_story"))
+          overall_story=request.body.overall_story;
+        record = await saveResult(userid, request.body.type, request.body,overall_story);
+        console.log(record.dataValues)
+        project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
+        //return response.json({status:"success",recordid:record.record_id})
+        const user = await User.findOne({ where: { id: userid } });
+        if (user === null)
+          console.log('user Not found!');
+        else {
+          var email = user.email;
+          console.log(email)
+          sendemail(email, modeldata.name, project.dataValues.createdAt.toString())
+        }
+
+      }
+    }
+    else if (request.body.type == "regression") {
+      resultmap.set(taskid + "_regression", request.body)
+      if (request.body.error == undefined) {
+        var overall_story=null;
+        if(request.body.hasOwnProperty("overall_story"))
+          overall_story=request.body.overall_story;
+        record = await saveResult(userid, request.body.type, request.body,overall_story);
+        console.log(record.dataValues)
+        project = await saveProject(userid, modeldata.name, modeldata.type, modeldata.dataset, modeldata.model, modeldata.idcolid, modeldata.labelcolid, "[" + modeldata.sensitivearray.toString() + "]", record.dataValues.record_id, null, null, null)
+        //return response.json({status:"success",recordid:record.record_id})
+        const user = await User.findOne({ where: { id: userid } });
+        if (user === null)
+          console.log('user Not found!');
+        else {
+          var email = user.email;
+          console.log(email)
+          sendemail(email, modeldata.name, project.dataValues.createdAt.toString())
+        }
+
+      }
+    }
     else if (request.body.type == "lgbmcol") {
       resultmap.set(taskid + "_lgbmcol", request.body)
     }
@@ -1083,11 +1194,49 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     else if (request.body.type == "lgbm_cm") {
       resultmap.set(taskid + "_lgbm_cm", request.body)
     }
+    else if (request.body.type == "decisiontree_cm") {
+      resultmap.set(taskid + "_decisiontree_cm", request.body)
+    }
+    else if (request.body.type == "regression_cm") {
+      resultmap.set(taskid + "_regression_cm", request.body)
+    }
     else if (request.body.type == "nn_cm") {
       resultmap.set(taskid + "_nn_cm", request.body)
     }
     else if (request.body.type == "lgbm_ms") {
       resultmap.set(taskid + "_lgbm_ms", request.body)
+      if (modeldata.hasOwnProperty("dashboardid")) {
+        var oldpeoject = await getDetailProject(parseInt(userid), modeldata.dashboardid)
+        oldpeoject.sensitive = "[" + (modeldata.sensitivearray).toString() + "]";
+        oldpeoject.save({ fields: ['sensitive'] })
+        var oldrecord = await getDetailResult(parseInt(userid), oldpeoject.recordid)
+        if (oldrecord != null) {
+          var jsondata = JSON.parse(oldrecord.json_data);
+          jsondata.sensitive = request.body.sensitive;
+          console.log(jsondata.sensitive)
+          oldrecord.json_data = JSON.stringify(jsondata);
+          oldrecord.save({ fields: ['json_data'] })
+        }
+      }
+    }
+    else if (request.body.type == "decisiontree_ms") {
+      resultmap.set(taskid + "_decisiontree_ms", request.body)
+      if (modeldata.hasOwnProperty("dashboardid")) {
+        var oldpeoject = await getDetailProject(parseInt(userid), modeldata.dashboardid)
+        oldpeoject.sensitive = "[" + (modeldata.sensitivearray).toString() + "]";
+        oldpeoject.save({ fields: ['sensitive'] })
+        var oldrecord = await getDetailResult(parseInt(userid), oldpeoject.recordid)
+        if (oldrecord != null) {
+          var jsondata = JSON.parse(oldrecord.json_data);
+          jsondata.sensitive = request.body.sensitive;
+          console.log(jsondata.sensitive)
+          oldrecord.json_data = JSON.stringify(jsondata);
+          oldrecord.save({ fields: ['json_data'] })
+        }
+      }
+    }
+    else if (request.body.type == "regression_ms") {
+      resultmap.set(taskid + "_regression_ms", request.body)
       if (modeldata.hasOwnProperty("dashboardid")) {
         var oldpeoject = await getDetailProject(parseInt(userid), modeldata.dashboardid)
         oldpeoject.sensitive = "[" + (modeldata.sensitivearray).toString() + "]";
@@ -1129,6 +1278,24 @@ app.post('/py/returndata', jsonParser, async (request, response) => {
     }
     else if (request.body.type == "cnnrow") {
       resultmap.set(taskid + "_cnnrow", request.body)
+    }
+    else if (request.body.type == "decisiontreerow") {
+      resultmap.set(taskid + "_decisiontreerow", request.body)
+    }
+    else if (request.body.type == "decisiontree_p") {
+      resultmap.set(taskid + "_decisiontree_p", request.body)
+    }
+    else if (request.body.type == "decisiontree_pl") {
+      resultmap.set(taskid + "_decisiontree_pl", request.body)
+    }
+    else if (request.body.type == "regressionrow") {
+      resultmap.set(taskid + "_regressionrow", request.body)
+    }
+    else if (request.body.type == "regression_p") {
+      resultmap.set(taskid + "_regression_p", request.body)
+    }
+    else if (request.body.type == "regression_pl") {
+      resultmap.set(taskid + "_regression_pl", request.body)
     }
     return response.json({ status: "success" })
 
