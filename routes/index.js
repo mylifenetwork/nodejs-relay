@@ -82,7 +82,7 @@ wss.on('request', function(request) {
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(clients))
 });
 */
-var maxtask=80
+var maxtask=50
 app.post('/ajax/sendmodel', jsonParser, (request, response) => {
   // 设置响应头  设置允许跨域
   response.setHeader('Accss-Control-Allow-Origin', '*');
@@ -166,7 +166,8 @@ app.post('/ajax/sendmodelcol', jsonParser, (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
@@ -218,7 +219,8 @@ app.post('/ajax/sendmodelrow', jsonParser, (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
@@ -279,7 +281,8 @@ app.post('/ajax/sendmodelp', jsonParser, (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
@@ -342,7 +345,8 @@ app.post('/ajax/sendmodelpl', jsonParser, (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
@@ -388,7 +392,8 @@ app.post('/ajax/sendmodelcm', jsonParser, (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
@@ -436,7 +441,8 @@ app.post('/ajax/sendmodelms', jsonParser, async (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
@@ -480,7 +486,8 @@ app.post('/ajax/sendmodelib', jsonParser, async (request, response) => {
     if (taskidpointer > maxtask) {
       taskmap.delete((taskidpointer - maxtask));
       Object.keys(resultmap).forEach(function (key) {
-        if(key.indexOf((taskidpointer - maxtask).toString())!=-1)
+        var key_number=key.split("_")[0];
+        if(key_number==(taskidpointer - maxtask))
         {
           console.log("delete:->"+key)
           resultmap.delete(key)
